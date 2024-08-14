@@ -122,7 +122,7 @@
 
   ;; PREVIEW LINE RENDERING
   (advice-add
-   'xorg-roam-unlinked-references--preview-line
+   'org-roam-unlinked-references-preview-line
    :around
    (lambda (orig-fun file row col file-prev row-prev col-prev)
      (if (and (string= file file-prev) (= row row-prev))

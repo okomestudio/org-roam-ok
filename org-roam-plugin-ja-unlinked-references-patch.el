@@ -42,7 +42,7 @@ supplied for use in the conditional expression."
     (and (not (file-equal-p (org-roam-node-file node) matched-file))
          (member (downcase matched-text) (mapcar #'downcase titles))))
 
-  (defun org-roam-unlinked-references--preview-line (file row col file-prev row-prev col-prev)
+  (defun org-roam-unlinked-references-preview-line (file row col file-prev row-prev col-prev)
     "Return the preview line from FILE.
 The line was matched with text at ROW and COL. FILE-PREV,
 ROW-PREV, and COL-PREV points to the previous line and can be
@@ -126,7 +126,7 @@ References from FILE are excluded."
                                  'font-lock-face 'org-roam-dim)
                                 " "
                                 (org-roam-fontify-like-in-org-mode
-                                 (org-roam-unlinked-references--preview-line
+                                 (org-roam-unlinked-references-preview-line
                                   f row col f-prev row-prev col-prev))
                                 "\n")
                         (setq f-prev f
