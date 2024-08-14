@@ -16,11 +16,10 @@
 ;; Here, we override the entire `org-roam-unlinked-references-section'
 ;; function to add enhancements.
 ;;
-
 (require 'magit-section)
 
 (with-eval-after-load 'org-roam-mode
-  (defcustom org-roam-plugin-ja-unlinked-references-word-boundary-re "|(\\b%1$s\\b)"
+  (defcustom org-roam-unlinked-references-word-boundary-re "|(\\b%1$s\\b)"
     "The word bounday regex used by ripgrep for unlinked references.
 In such languages as CJK, the regex's word boundary (\b) does not
 correctly determine how words and phrases should be tokenized.
@@ -28,7 +27,7 @@ This custom variable allows users to extend regex in those cases."
     :group 'org-roam
     :type 'string)
 
-  (defcustom org-roam-plugin-ja-unlinked-references-max-results-count 1000
+  (defcustom org-roam-unlinked-references-max-results-count 1000
     "The max number of items in the unlinked references section.
 Rendering of the unlinked references section can appear to freeze
 when the match count is very large. This number limits the
@@ -37,7 +36,7 @@ the issue."
     :group 'org-roam
     :type 'integer)
 
-  (defun org-roam-plugin-ja-unlinked-references-result-filter-p (matched-text matched-file row col titles node)
+  (defun org-roam-unlinked-references--result-filter-p (matched-text matched-file row col titles node)
     "Filter if the match is considered an unlinked reference.
 Return non-nil if MATCHED-TEXT at ROW and COL in MATCHED-FILE is
 an unlinked reference, or return nil. TITLES and NODE are
@@ -45,7 +44,7 @@ supplied for use in the conditional expression."
     (and (not (file-equal-p (org-roam-node-file node) matched-file))
          (member (downcase matched-text) (mapcar #'downcase titles))))
 
-  (defun org-roam-plugin-ja-unlinked-references-preview-line (file row col file-prev row-prev col-prev)
+  (defun org-roam-unlinked-references--preview-line (file row col file-prev row-prev col-prev)
     "Return the preview line from FILE.
 The line was matched with text at ROW and COL. FILE-PREV,
 ROW-PREV, and COL-PREV points to the previous line and can be
@@ -61,32 +60,32 @@ used to control rendering."
          (end-of-line)
          (point)))))
 
-  (defun org-roam-plugin-ja-unlinked-references-file-glob-args ()
+  (defun org-roam-unlinked-references--file-glob-args ()
     "Construct file glob arguments for ripgrep."
     (mapconcat (lambda (glob) (concat "-g " glob))
                (org-roam--list-files-search-globs org-roam-file-extensions)
                " "))
 
-  (defun org-roam-plugin-ja-unlinked-references-title-regex (titles)
+  (defun org-roam-unlinked-references--title-regex (titles)
     "Construct a ripgrep regex pattern from TITLES.
 The output expression should be sanitized for the shell use."
     (format "'\\[([^[]]++|(?R))+\\]%s'"
-            (mapconcat 'org-roam-plugin-ja-unlinked-references-apply-word-boundary-re titles "")))
+            (mapconcat 'org-roam-unlinked-references--apply-word-boundary-re titles "")))
 
-  (defun org-roam-plugin-ja-unlinked-references-apply-word-boundary-re (title)
+  (defun org-roam-unlinked-references--apply-word-boundary-re (title)
     "Wrap TITLE with word boundary regex."
-    (format org-roam-plugin-ja-unlinked-references-word-boundary-re
-            (org-roam-plugin-ja-unlinked-references-sanitize-title title)))
+    (format org-roam-unlinked-references-word-boundary-re
+            (org-roam-unlinked-references--sanitize-title title)))
 
-  (defun org-roam-plugin-ja-unlinked-references-sanitize-title (title)
+  (defun org-roam-unlinked-references--sanitize-title (title)
     "Sanitize TITLE for shell use."
     (mapconcat #'shell-quote-argument (split-string title "'") "'\"'\"'"))
 
-  (defun org-roam-plugin-ja-unlinked-references--rg-command (titles)
+  (defun org-roam-unlinked-references--rg-command (titles)
     "Return the ripgrep command searching for TITLES."
     (concat "rg --follow --only-matching --vimgrep --pcre2 --ignore-case "
-            (org-roam-plugin-ja-unlinked-references-file-glob-args) " "
-            (org-roam-plugin-ja-unlinked-references-title-regex titles) " "
+            (org-roam-unlinked-references--file-glob-args) " "
+            (org-roam-unlinked-references--title-regex titles) " "
             (shell-quote-argument org-roam-directory)))
 
   (defun org-roam-plugin-ja-unlinked-references-section (node)
@@ -98,7 +97,7 @@ References from FILE are excluded."
                                   (shell-command-to-string "rg --pcre2-version"))))
       (let* ((titles (cons (org-roam-node-title node)
                            (org-roam-node-aliases node)))
-             (rg-command (org-roam-plugin-ja-unlinked-references--rg-command titles))
+             (rg-command (org-roam-unlinked-references--rg-command titles))
              (results (split-string (shell-command-to-string rg-command) "\n"))
              (match_count 0)
              f f-prev row row-prev col col-prev matched-text)
@@ -113,7 +112,7 @@ References from FILE are excluded."
                         col (string-to-number (match-string 3 line))
                         matched-text (match-string 4 line))
                   (when (and matched-text
-                             (org-roam-plugin-ja-unlinked-references-result-filter-p
+                             (org-roam-unlinked-references--result-filter-p
                               matched-text f row col titles node))
                     (magit-insert-section
                         section (org-roam-grep-section)
@@ -128,17 +127,17 @@ References from FILE are excluded."
                                  'font-lock-face 'org-roam-dim)
                                 " "
                                 (org-roam-fontify-like-in-org-mode
-                                 (org-roam-plugin-ja-unlinked-references-preview-line
+                                 (org-roam-unlinked-references--preview-line
                                   f row col f-prev row-prev col-prev))
                                 "\n")
                         (setq f-prev f
                               row-prev row
                               col-prev col
                               match_count (+ match_count 1))
-                        (if (= match_count org-roam-plugin-ja-unlinked-references-max-results-count)
+                        (if (= match_count org-roam-unlinked-references-max-results-count)
                             (insert (format "WARNING: Results truncated to %d items (%d potential matches)"
                                             match_count (length results))))))))
-              (if (= match_count org-roam-plugin-ja-unlinked-references-max-results-count)
+              (if (= match_count org-roam-unlinked-references-max-results-count)
                   ;; Throw outside of magit-insert-section to render correct item count.
                   (throw 'limit-result match_count))))
           (insert ?\n))))))
@@ -189,7 +188,7 @@ References from FILE are excluded."
           (concat "|(\\b%1$s\\b"
                   "|(\\b%1$s\\b"
                   "|(?<=[^\x20-\x7e\xff61-\xff9f])%1$s(?=[^\x20-\x7e\xff61-\xff9f]))")))
-    (setopt org-roam-plugin-ja-unlinked-references-word-boundary-re word-boundary-re-strict))
+    (setopt org-roam-unlinked-references-word-boundary-re word-boundary-re-strict))
 
   ;; TITLE EXTRACTION REGEX
   (advice-add
@@ -222,7 +221,7 @@ References from FILE are excluded."
 
   ;; TITLE SANITIZATION
   (advice-add
-   'org-roam-plugin-ja-unlinked-references-apply-word-boundary-re
+   'org-roam-unlinked-references--apply-word-boundary-re
    :around
    (lambda (orig-func title)
      (let* (;; Expand quote variants:
@@ -239,7 +238,7 @@ References from FILE are excluded."
 
   ;; PREDICATE FOR UNLINKED REFERENCE CHECK
   (advice-add
-   'org-roam-plugin-ja-unlinked-references-result-filter-p
+   'org-roam-unlinked-references--result-filter-p
    :override
    (lambda (matched-text matched-file row col titles node)
      (let ((linked-re (format "\\[\\[id:%s\\]\\[.*\\]\\]" (org-roam-node-id node))))
@@ -263,7 +262,7 @@ References from FILE are excluded."
 
   ;; PREVIEW LINE RENDERING
   (advice-add
-   'org-roam-plugin-ja-unlinked-references-preview-line
+   'xorg-roam-unlinked-references--preview-line
    :around
    (lambda (orig-fun file row col file-prev row-prev col-prev)
      (if (and (string= file file-prev) (= row row-prev))
