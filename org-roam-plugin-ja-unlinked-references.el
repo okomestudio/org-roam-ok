@@ -52,11 +52,11 @@
 
   ;; TITLE EXTRACTION REGEX
   (advice-add
-   'org-roam-plugin-ja-unlinked-references-title-regex
+   'org-roam-unlinked-references--title-regex
    :override
    (lambda (titles)
      (let ((bounded-re (substring (mapconcat
-                                   #'org-roam-plugin-ja-unlinked-references-apply-word-boundary-re
+                                   #'org-roam-unlinked-references--apply-word-boundary-re
                                    titles "")
                                   1))
 
