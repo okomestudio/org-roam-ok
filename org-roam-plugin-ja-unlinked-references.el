@@ -5,7 +5,7 @@
 ;;
 ;;; Code:
 
-(require 'org-roam-plugin-ja-unlinked-references-patch) ;; uncomment this line when using without patch
+;; (require 'org-roam-plugin-ja-unlinked-references-patch) ;; uncomment this line when using without patch
 
 (with-eval-after-load 'org-roam-mode
   ;; WORD BOUNDARY
