@@ -69,11 +69,15 @@
            (nlb "(?!(?=(?<a>[\\s\\S]*))(?<b>(%s)(?=\\k<a>\\z)|(?<=(?=x^|(?&b))[\\s\\S])))")
 
            ;; The list of substrings for negative matching:
-           (lines-to-ignore '("begin_src +"
-                              "filetags: "
-                              "header-args: "
-                              "PYTHONDONTWRITEBYTECODE=1 "
-                              "transclude: ")))
+           (lines-to-ignore '("PYTHONDONTWRITEBYTECODE=1 "
+                              "begin_src.+"
+                              "export_hugo_bundle:.+"
+                              "filetags:.+"
+                              "hugo_bundle:.+"
+                              "hugo_tags:.+"
+                              "parent:.+"
+                              "property:.+"
+                              "transclude:.+")))
        (format "'\\[\\[id:[0-9a-f-]+\\]\\[[^][]*(%s)[^][]*\\]\\]|%s(%s)'"
                bounded-re
                (format nlb (string-join lines-to-ignore "|"))
