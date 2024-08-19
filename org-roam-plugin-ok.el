@@ -5,6 +5,7 @@
 ;;
 ;;; Code:
 
+(require 'orp-ok-utils)
 (require 'org-roam-plugin-ja-unlinked-references)
 
 (provide 'org-roam-plugin-ok)
