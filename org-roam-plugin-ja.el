@@ -1,4 +1,4 @@
-;;; org-roam-plugin-ja.el --- Org Roam Plugin for Japanese  -*- lexical-binding: t -*-
+;;; org-roam-plugin-ok.el --- Org Roam Plugin for Okome Studio  -*- lexical-binding: t -*-
 ;;; Commentary:
 ;;
 ;; This is the top-level module. Load all plugin modules here.
@@ -7,5 +7,5 @@
 
 (require 'org-roam-plugin-ja-unlinked-references)
 
-(provide 'org-roam-plugin-ja)
-;;; org-roam-plugin-ja.el ends here
+(provide 'org-roam-plugin-ok)
+;;; org-roam-plugin-ok.el ends here
