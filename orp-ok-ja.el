@@ -1,11 +1,21 @@
-;;; orp-ok-ja.el --- Unlinked References Section  -*- lexical-binding: t -*-
+;;; orp-ok-ja.el --- Japanese Plugin  -*- lexical-binding: t -*-
+;;
+;; Copyright (C) 2024 Taro Sato
+;;
+;; Author: Taro Sato <okomestudio@gmail.com>
+;; URL: https://github.com/okomestudio/org-roam-plugin-ok
+;; Version: 0.1
+;; Keywords: org-mode, roam, plug-in
+;; Package-Requires: ((emacs "29.1") (org "9.4") (dash "2.13") (adaptive-wrap "0.8"))
+;;
 ;;; Commentary:
 ;;
-;; Customize the unlinked references section for use with Japanese.
+;; Configure the patched `org-roam' for the Japanese usage.
 ;;
 ;;; Code:
 
 (require 'orp-ok-ja-patch) ;; uncomment this line when using without patch
+(require 'adaptive-wrap)
 
 (with-eval-after-load 'org-roam-mode
   ;; WORD BOUNDARY
@@ -133,7 +143,16 @@
          ;; Use a "ditto" mark if the current line is
          ;; similar to the previous line.
          "⎯〃⎯"
-       (funcall orig-fun file row col file-prev row-prev col-prev)))))
+       (funcall orig-fun file row col file-prev row-prev col-prev))))
+
+  ;; ORG ROAM BUFFER FORMATTING
+  (defun orp-ok-ja--org-roam-buffer-format ()
+    "Format org-roam buffer for ease of viewing multi-line items."
+    (turn-on-visual-line-mode)
+    (setq-local adaptive-wrap-extra-indent 4)
+    (adaptive-wrap-prefix-mode +1))
+
+  (add-hook 'org-roam-mode-hook #'orp-ok-ja--org-roam-buffer-format))
 
 (provide 'orp-ok-ja)
 ;;; orp-ok-ja.el ends here

@@ -1,4 +1,13 @@
 ;;; orp-ok-ja-patch.el --- Japanese patch  -*- lexical-binding: t -*-
+;;
+;; Copyright (C) 2024 Taro Sato
+;;
+;; Author: Taro Sato <okomestudio@gmail.com>
+;; URL: https://github.com/okomestudio/org-roam-plugin-ok
+;; Version: 0.1
+;; Keywords: org-mode, roam, plug-in
+;; Package-Requires: ((emacs "29.1") (org "9.4") (dash "2.13") (adaptive-wrap "0.8"))
+;;
 ;;; Commentary:
 ;;
 ;; This module supplies a patch to enhance the unlinked references
