@@ -1,4 +1,4 @@
-;;; org-roam-plugin-ja-unlinked-references-patch.el --- Unlinked References Section Patch  -*- lexical-binding: t -*-
+;;; orp-ok-ja-patch.el --- Japanese patch  -*- lexical-binding: t -*-
 ;;; Commentary:
 ;;
 ;; This module supplies a patch to enhance the unlinked references
@@ -9,8 +9,8 @@
 ;;
 ;;   - https://github.com/org-roam/org-roam/pull/2417/
 ;;
-;; Use the `org-roam-plugin-ja-unlinked-references-section' function
-;; in place of `org-roam-unlinked-references-section'.
+;; Use the `orp-ok-ja-unlinked-references-section' function in place
+;; of `org-roam-unlinked-references-section'.
 ;;
 ;;; Code:
 
@@ -86,7 +86,7 @@ The output expression should be sanitized for the shell use."
             (org-roam-unlinked-references--title-regex titles) " "
             (shell-quote-argument org-roam-directory)))
 
-  (defun org-roam-plugin-ja-unlinked-references-section (node)
+  (defun orp-ok-ja-unlinked-references-section (node)
     "The unlinked references section for NODE.
 References from FILE are excluded."
     (when (and (executable-find "rg")
@@ -141,5 +141,5 @@ References from FILE are excluded."
                   (throw 'limit-result match_count))))
           (insert ?\n))))))
 
-(provide 'org-roam-plugin-ja-unlinked-references-patch)
-;;; org-roam-plugin-ja-unlinked-references-patch.el ends here
+(provide 'orp-ok-ja-patch)
+;;; orp-ok-ja-patch.el ends here

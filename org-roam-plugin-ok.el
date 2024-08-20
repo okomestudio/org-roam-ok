@@ -5,9 +5,9 @@
 ;;
 ;;; Code:
 
-(require 'orp-ok-node)
 (require 'orp-ok-utils)
-(require 'org-roam-plugin-ja-unlinked-references)
+(require 'orp-ok-node)
+(require 'orp-ok-ja)
 
 (provide 'org-roam-plugin-ok)
 ;;; org-roam-plugin-ok.el ends here

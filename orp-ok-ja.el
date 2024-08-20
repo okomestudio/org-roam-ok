@@ -1,11 +1,11 @@
-;;; org-roam-plugin-ja-unlinked-references.el --- Unlinked References Section  -*- lexical-binding: t -*-
+;;; orp-ok-ja.el --- Unlinked References Section  -*- lexical-binding: t -*-
 ;;; Commentary:
 ;;
 ;; Customize the unlinked references section for use with Japanese.
 ;;
 ;;; Code:
 
-;; (require 'org-roam-plugin-ja-unlinked-references-patch) ;; uncomment this line when using without patch
+(require 'orp-ok-ja-patch) ;; uncomment this line when using without patch
 
 (with-eval-after-load 'org-roam-mode
   ;; WORD BOUNDARY
@@ -135,5 +135,5 @@
          "⎯〃⎯"
        (funcall orig-fun file row col file-prev row-prev col-prev)))))
 
-(provide 'org-roam-plugin-ja-unlinked-references)
-;;; org-roam-plugin-ja-unlinked-references.el ends here
+(provide 'orp-ok-ja)
+;;; orp-ok-ja.el ends here
