@@ -103,7 +103,7 @@
   (cl-defmethod org-roam-node-orp-tags ((node org-roam-node))
     (let ((tags (org-roam-node-tags node)))
       (when tags
-        (format "#%s" (string-join tags " #")))))
+        (format "#%s#" (string-join tags "#")))))
 
   (cl-defmethod org-roam-node-orp-timestamp ((node org-roam-node))
     (let* ((inhibit-message t)
