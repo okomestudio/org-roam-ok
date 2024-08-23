@@ -14,6 +14,12 @@
 ;;
 ;;; Code:
 
+(defun orp-ok-create-missing-directories (FILE)
+  "Create parent directories of FILE if missing."
+  (let ((parent-directory (file-name-directory FILE)))
+    (and (not (file-directory-p parent-directory))
+         (make-directory parent-directory 'parents))))
+
 (with-eval-after-load 'org-roam
   (defun orp-ok-mode--create-missing-parent-directories ()
     "Automatically create missing directories when creating new files.
@@ -28,7 +34,18 @@ the Org capture."
                t)))))
 
   (add-hook 'find-file-not-found-functions
-            #'orp-ok-mode--create-missing-parent-directories))
+            #'orp-ok-mode--create-missing-parent-directories)
+
+  (defun rename-file--create-missing-directories-before
+      (_ NEWNAME &optional _)
+    "Create missing directories if missing before `rename-file'."
+    (let ((newname (expand-file-name NEWNAME)))
+      (unless (file-remote-p newname)
+        (and (string-prefix-p org-roam-directory newname)
+             (orp-ok-create-missing-directories newname)))))
+
+  (advice-add 'rename-file
+              :before #'rename-file--create-missing-directories-before))
 
 (provide 'orp-ok-mode)
 ;;; orp-ok-mode.el ends here
