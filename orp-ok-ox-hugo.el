@@ -16,12 +16,31 @@
 
 (require 'orp-ok-utils)
 
-(defcustom org-export-hugo-blog-tag "blog"
-  "FILETAG used for Hugo blog article.")
+(defcustom org-export-hugo-article-tag "blog"
+  "FILETAGS name used for Hugo articles.")
 
 (with-eval-after-load 'ox-hugo
-  (defun orp-export-hugo-make-exportable ()
-    "Add keywords to file for Hugo exports."
+  (defun orp-ok-ox-hugo-exportable-p ()
+    "Return t if the current buffer is ready for Hugo export."
+    (interactive)
+    (catch 'false
+      (dolist (keyword '("HUGO_TAGS"
+                         "HUGO_SECTION"
+                         "HUGO_DRAFT"
+                         "HUGO_CUSTOM_FRONT_MATTER"
+                         "HUGO_BUNDLE"
+                         "HUGO_BASE_DIR"
+                         "HUGO_AUTO_SET_LASTMOD"
+                         "EXPORT_HUGO_BUNDLE"
+                         "EXPORT_FILE_NAME"
+                         "DATE"
+                         "AUTHOR"))
+        (if (not (org-roam-get-keyword keyword))
+            throw 'false nil))
+      t))
+
+  (defun orp-ok-ox-hugo-make-exportable ()
+    "Add keywords to prepare the current buffer for Hugo export."
     (interactive)
     (save-excursion
       (beginning-of-buffer)
@@ -45,6 +64,13 @@
                       ("AUTHOR" . ,user-login-name)))
           (org-roam-set-keyword (car it) (cdr it))))
       (org-roam-tag-add `(,org-export-hugo-blog-tag))))
+
+  (advice-add #'org-hugo--before-export-function
+              :before
+              (lambda (subtreep)
+                (interactive)
+                (when (not (orp-ok-ox-hugo-exportable-p))
+                  (orp-ok-ox-hugo-make-exportable))))
 
   (defun org-hugo-link--strip-id-link (fun link desc info)
     "Remove Org links of type 'id'."
