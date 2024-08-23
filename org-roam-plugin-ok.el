@@ -16,6 +16,7 @@
 
 (require 'orp-ok-utils)
 (require 'orp-ok-init)
+(require 'orp-ok-capture)
 (require 'orp-ok-mode)
 (require 'orp-ok-node)
 (require 'orp-ok-ja)
