@@ -73,5 +73,10 @@
                                  pairs)))
         (downcase slug)))))
 
+(defun orp-filetags ()
+  "Get filetags."
+  (remove-if (lambda (x) (string= "" x))
+             (string-split (cadar (org-collect-keywords '("filetags"))) ":")))
+
 (provide 'orp-ok-utils)
 ;;; orp-ok-utils.el ends here
