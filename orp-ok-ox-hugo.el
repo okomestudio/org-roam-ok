@@ -27,7 +27,7 @@
     (let ((tags (cl-remove-if (lambda (a) (string= a ""))
                               (split-string (org-roam-get-keyword "filetags")
                                             ":"))))
-      (if (not (member org-export-hugo-article-tag tags))
+      (if (not (member orp-ok-ox-hugo-article-tag tags))
           (message "Non-%s document not make Hugo-exportable"
                    org-export-hugo-article-tag)
         (save-excursion
@@ -62,7 +62,7 @@
     (let ((type (org-element-property :type link))
           (tags (org-roam-get-keyword "filetags")))
       (cond ((string= type "id")
-             (or (and (cl-search (format ":%s:" org-export-hugo-article-tag) tags)
+             (or (and (cl-search (format ":%s:" orp-ok-ox-hugo-article-tag) tags)
                       desc)
                  (funcall fun link desc info)))
             (t (funcall fun link desc info)))))
