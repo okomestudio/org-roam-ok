@@ -19,7 +19,6 @@
 (require 'orp-ok-capture)
 (require 'orp-ok-mode)
 (require 'orp-ok-node)
-(require 'orp-ok-ox-hugo)
 (require 'orp-ok-ja)
 
 ;;;###autoload

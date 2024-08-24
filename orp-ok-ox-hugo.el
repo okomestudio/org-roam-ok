@@ -17,7 +17,7 @@
 
 (require 'orp-ok-utils)
 
-(defcustom org-export-hugo-article-tag "blog"
+(defcustom orp-ok-ox-hugo-article-tag "blog"
   "FILETAGS name used for Hugo articles.")
 
 (with-eval-after-load 'ox-hugo
