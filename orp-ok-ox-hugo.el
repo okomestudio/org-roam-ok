@@ -1,4 +1,4 @@
-;;; orp-ok-ox-hugo.el --- Plugin for ox-hugo  -*- lexical-binding: t -*-
+;;; orp-ok-ox-hugo.el --- ox-hugo plug-in  -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2024 Taro Sato
 ;;
@@ -10,7 +10,8 @@
 ;;
 ;;; Commentary:
 ;;
-;; This module provides a plugin for `ox-hugo'.
+;; This `ox-hugo' plug-in is intended for Hugo articles written as Org
+;; file. Articles written as Org subtrees are not supported.
 ;;
 ;;; Code:
 
@@ -20,64 +21,51 @@
   "FILETAGS name used for Hugo articles.")
 
 (with-eval-after-load 'ox-hugo
-  (defun orp-ok-ox-hugo-exportable-p ()
-    "Return t if the current buffer is ready for Hugo export."
-    (interactive)
-    (catch 'false
-      (dolist (keyword '("HUGO_TAGS"
-                         "HUGO_SECTION"
-                         "HUGO_DRAFT"
-                         "HUGO_CUSTOM_FRONT_MATTER"
-                         "HUGO_BUNDLE"
-                         "HUGO_BASE_DIR"
-                         "HUGO_AUTO_SET_LASTMOD"
-                         "EXPORT_HUGO_BUNDLE"
-                         "EXPORT_FILE_NAME"
-                         "DATE"
-                         "AUTHOR"))
-        (if (not (org-roam-get-keyword keyword))
-            throw 'false nil))
-      t))
-
-  (defun orp-ok-ox-hugo-make-exportable ()
+  (defun orp-ok-ox-hugo-make-exportable (&optional subtreep)
     "Add keywords to prepare the current buffer for Hugo export."
     (interactive)
-    (save-excursion
-      (beginning-of-buffer)
-      (let* ((node (org-roam-node-at-point))
-             (title (org-roam-node-title node))
-             (slug (orp-string-to-org-slug title))
-             (time (current-time))
-             (date (format-time-string "%Y-%m-%d" time))
-             (section (format-time-string "%Y/%m" time))
-             (tags (org-roam-node-tags node)))
-        (dolist (it `(("HUGO_TAGS" . ,(string-join tags " "))
-                      ("HUGO_SECTION" . ,section)
-                      ("HUGO_DRAFT" . "true")
-                      ("HUGO_CUSTOM_FRONT_MATTER" . ":archived false")
-                      ("HUGO_BUNDLE" . ,slug)
-                      ("HUGO_BASE_DIR" . ,org-hugo-base-dir)
-                      ("HUGO_AUTO_SET_LASTMOD" . "t")
-                      ("EXPORT_HUGO_BUNDLE" . ,slug)
-                      ("EXPORT_FILE_NAME" . "index")
-                      ("DATE" . ,date)
-                      ("AUTHOR" . ,user-login-name)))
-          (org-roam-set-keyword (car it) (cdr it))))
-      (org-roam-tag-add `(,org-export-hugo-blog-tag))))
+    (let ((tags (cl-remove-if (lambda (a) (string= a ""))
+                              (split-string (org-roam-get-keyword "filetags")
+                                            ":"))))
+      (if (not (member org-export-hugo-article-tag tags))
+          (message "Non-%s document not make Hugo-exportable"
+                   org-export-hugo-article-tag)
+        (save-excursion
+          (beginning-of-buffer)
+          (let* ((node (org-roam-node-at-point))
+                 (title (org-roam-node-title node))
+                 (slug (orp-string-to-org-slug title))
+                 (time (current-time))
+                 (date (format-time-string "%Y-%m-%d" time))
+                 (section (format-time-string "%Y/%m" time))
+                 (tags (org-roam-node-tags node)))
+            (dolist (it `(("hugo_tags" . ,(string-join tags " "))
+                          ("hugo_section" . ,section)
+                          ("hugo_draft" . "true")
+                          ("hugo_custom_front_matter" . ":archived false")
+                          ("hugo_bundle" . ,slug)
+                          ("hugo_base_dir" . ,org-hugo-base-dir)
+                          ("hugo_auto_set_lastmod" . "t")
+                          ("export_hugo_bundle" . ,slug)
+                          ("export_file_name" . "index")
+                          ("date" . ,date)
+                          ("author" . ,user-login-name)))
+              (let ((keyword (car it))
+                    (value (cdr it)))
+                (if (not (org-roam-get-keyword keyword))
+                    (org-roam-set-keyword keyword value)))))))))
 
-  (advice-add #'org-hugo--before-export-function
-              :before
-              (lambda (subtreep)
-                (interactive)
-                (when (not (orp-ok-ox-hugo-exportable-p))
-                  (orp-ok-ox-hugo-make-exportable))))
+  (advice-add #'org-hugo--before-export-function :before #'orp-ok-ox-hugo-make-exportable)
 
   (defun org-hugo-link--strip-id-link (fun link desc info)
-    "Remove Org links of type 'id'."
-    (let ((type (org-element-property :type link)))
-      (if (string= type "id")
-          desc
-        (funcall fun link desc info))))
+    "Render Org Roam links with their description."
+    (let ((type (org-element-property :type link))
+          (tags (org-roam-get-keyword "filetags")))
+      (cond ((string= type "id")
+             (or (and (cl-search (format ":%s:" org-export-hugo-article-tag) tags)
+                      desc)
+                 (funcall fun link desc info)))
+            (t (funcall fun link desc info)))))
 
   (advice-add #'org-hugo-link :around #'org-hugo-link--strip-id-link)
 
