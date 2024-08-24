@@ -45,6 +45,10 @@
                             "ば"
                             "まま" "ものか" "ものの" "もん"
                             "わ")))
+         ;; These are not joshi, but nouns that can come before
+         ;; (proper) nouns for descriptions, e.g., "政治家田中角栄":
+         (joshi_l (append joshi_l
+                          '("家" "スト")))
 
          (word-boundary-re-strict
           (concat "|(\\b%1$s\\b"
