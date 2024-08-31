@@ -17,19 +17,22 @@
 
 (require 'orp-ok-utils)
 
-(defcustom orp-ok-ox-hugo-article-tag "blog"
-  "FILETAGS name used for Hugo articles.")
+(defcustom orp-ok-ox-hugo-content-tag "blog"
+  "The file tag used for Hugo contents.")
+
+(defcustom orp-ok-ox-hugo-draft-state-tags '((true . '("wip")) (false . '("posted")))
+  "The file tags used for the HUGO_DRAFT keyword.")
 
 (with-eval-after-load 'ox-hugo
-  (defun orp-ok-ox-hugo-make-exportable (&optional subtreep)
+  (defun orp-ok-ox-hugo-content-metadata-update (&optional subtreep)
     "Add keywords to prepare the current buffer for Hugo export."
     (interactive)
-    (let ((tags (cl-remove-if (lambda (a) (string= a ""))
-                              (split-string (org-roam-get-keyword "filetags")
-                                            ":"))))
-      (if (not (member orp-ok-ox-hugo-article-tag tags))
-          (message "Non-%s document not make Hugo-exportable"
-                   org-export-hugo-article-tag)
+    (let ((filetags (cl-remove-if (lambda (a) (string= a ""))
+                                  (split-string (org-roam-get-keyword "filetags")
+                                                ":"))))
+      (if (not (member orp-ok-ox-hugo-content-tag filetags))
+          (error "A note without the '%s' tag is not Hugo-exportable."
+                 orp-ok-ox-hugo-content-tag)
         (save-excursion
           (beginning-of-buffer)
           (let* ((node (org-roam-node-at-point))
@@ -38,8 +41,15 @@
                  (time (current-time))
                  (date (format-time-string "%Y-%m-%d" time))
                  (section (format-time-string "%Y/%m" time))
-                 (tags (org-roam-node-tags node)))
-            (dolist (it `(("hugo_tags" . ,(string-join tags " "))
+                 (tags (org-roam-node-tags node))
+                 (non-hugo-tags (append
+                                 `(,orp-ok-ox-hugo-content-tag)
+                                 (flatten-list (mapcar 'cddr
+                                                       orp-ok-ox-hugo-draft-state-tags))))
+                 (hugo-tags (seq-filter (lambda (t)
+                                          (not (member t non-hugo-tags)))
+                                        tags)))
+            (dolist (it `(("hugo_tags" . ,(string-join hugo-tags " "))
                           ("hugo_section" . ,section)
                           ("hugo_draft" . "true")
                           ("hugo_custom_front_matter" . ":archived false")
@@ -55,7 +65,7 @@
                 (if (not (org-roam-get-keyword keyword))
                     (org-roam-set-keyword keyword value)))))))))
 
-  (advice-add #'org-hugo--before-export-function :before #'orp-ok-ox-hugo-make-exportable)
+  (advice-add #'org-hugo--before-export-function :before #'orp-ok-ox-hugo-content-metadata-update)
 
   (defun org-hugo-link--strip-id-link (fun link desc info)
     "Render Org Roam links with their description."
