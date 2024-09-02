@@ -42,7 +42,7 @@
 
   (defun orp--node-id-from-file (file)
     "Get the node ID for FILE."
-    (caar (org-roam-db-query `[:select nodes:id :from nodes
+    (caar (org-roam-db-query `[:select :distinct nodes:id :from nodes
                                        :where (and (= nodes:file ,file)
                                                    (= nodes:level 0))])))
 
@@ -68,20 +68,18 @@
 
   (defun orp--title-aux-get (node)
     "Get the auxiliary title info for NODE."
-    (let ((node-title (org-roam-node-title node))
-          (node-file-title (or (if (not (s-blank? (org-roam-node-file-title node)))
-                                   (org-roam-node-file-title node))
-                               (file-name-nondirectory (org-roam-node-file node)))))
-      (if (string= node-title node-file-title)
-          ;; This is the file-level node.
-          (let ((p (orp--parent-title-get node)))
-            (if p
-                (list " ❬ " p))) ;; add the parent title if a parent exists
-        ;; This is a node within a file.
-        (if (member node-title (org-roam-node-aliases node))
-            (list " = " node-file-title) ;; show equality for the alias entry
-          (let ((p (orp--parent-title-get (orp--node-from-file (org-roam-node-file node)))))
-            (list " ❬ " (or p node-file-title)))))))
+    (let ((node-title (org-roam-node-title node)))
+      (if (member node-title (org-roam-node-aliases node))
+          (list " = " (org-roam-node-file-title node))
+        (if (eq 0 (org-roam-node-level node))
+            ;; File-level node
+            (let ((pt (orp--parent-title-get node)))
+              (if pt
+                  (list " ❬ " pt)))
+          ;; Non-file-level node
+          (let* ((p (orp--node-from-file (org-roam-node-file node)))
+                 (pt (orp--parent-title-get p)))
+            (list " ❬ " (or pt (org-roam-node-file-title node))))))))
 
   (defun orp--title-aux-render (title-aux)
     (if (not title-aux)
