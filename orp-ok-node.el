@@ -99,7 +99,13 @@
             (orp--title-aux-render (orp--title-aux-get node))))
 
   (cl-defmethod org-roam-node-orp-tags ((node org-roam-node))
-    (let ((tags (org-roam-node-tags node)))
+    (let ((tags (if (eq 0 (org-roam-node-level node))
+                    ;; File-level node
+                    (org-roam-node-tags node)
+                  ;; Non-file-level node
+                  (cl-set-difference (org-roam-node-tags node)
+                                     org-tags-exclude-from-inheritance
+                                     :test 'equal))))
       (when tags
         (format "#%s#" (string-join tags "#")))))
 
