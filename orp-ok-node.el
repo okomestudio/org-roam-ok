@@ -5,8 +5,8 @@
 ;; Author: Taro Sato <okomestudio@gmail.com>
 ;; URL: https://github.com/okomestudio/org-roam-plugin-ok
 ;; Version: 0.1
-;; Keywords: org-mode, roam, plug-in
-;; Package-Requires: ((emacs "29.1") (org "9.4") (dash "2.13") (adaptive-wrap "0.8"))
+;; Keywords: org-mode, org-roam, plug-in
+;; Package-Requires: ((emacs "29.1") (org "9.7") (org-roam "2.2.2"))
 ;;
 ;;; Commentary:
 ;;
