@@ -39,7 +39,10 @@
                                  :from nodes
                                  :where (= nodes:level 0)]))
 
-  ;;; In-memory cache
+  (defun orp-ok-node--all-nodes ()
+    (org-roam-db-query '[:select nodes:id :from nodes]))
+
+;;; In-memory cache
   ;;
   ;; This caching layer exists to speed up the interactive node query.
   ;;
@@ -57,9 +60,9 @@
   (defun orp-ok-node--cache-in-memory-file-remove (file)
     (remhash file orp-ok-node--cache-in-memory-file))
 
-  (defun orp-ok-node--init-cache-in-memory-file ()
+  (defun orp-ok-node--cache-in-memory-file-fill ()
     (dolist (row (orp-ok-node--all-file-nodes-and-ids))
-      (puthash (car row) (cadr row) orp-ok-node--cache-in-memory-file)))
+      (orp-ok-node--cache-in-memory-file-save (car row) (cadr row))))
 
   (defvar orp-ok-node--cache-in-memory (make-hash-table :test 'equal)
     "In-memory cache, mapping a node ID to its node.")
@@ -96,6 +99,10 @@
   (defun orp-ok-node--cache-in-memory-remove (node-id)
     "Save NODE to the in-memory cache."
     (remhash node-id orp-ok-node--cache-in-memory))
+
+  (defun orp-ok-node--cache-in-memory-fill ()
+    (dolist (row (orp-ok-node--all-nodes))
+      (orp-ok-node--from-id (car row))))
 
   (defun orp-ok-node--cache-in-memory-maybe-remove ()
     (let ((file buffer-file-name))
@@ -232,7 +239,16 @@
                                       (org-roam-node-properties node)))))
       (if parent
           (org-link-open-from-string parent)
-        (message "No parent found for this node")))))
+        (message "No parent found for this node"))))
+
+  ;;; Fill cache on idle for speeding up the first invocation
+
+  (defun orp-ok-node--on-idle ()
+    (message "On idle...")
+    (orp-ok-node--cache-in-memory-fill)
+    (orp-ok-node--cache-in-memory-file-fill))
+
+  (run-with-idle-timer 10 nil #'orp-ok-node--on-idle))
 
 (provide 'orp-ok-node)
 ;;; orp-ok-node.el ends here

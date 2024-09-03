@@ -14,16 +14,5 @@
 ;;
 ;;; Code:
 
-(with-eval-after-load 'org-roam-mode
-  (defun orp-ok-init--node-list-refresh ()
-    "Refresh node list to speed up the initial node finding."
-    (message "Running orp-ok-init--node-list-refresh...")
-    (org-roam-node-list)
-    ;; Commented out since title construction appears to break:
-    ;; (org-roam-node-read--completions)
-    )
-
-  (run-with-idle-timer 15 nil #'orp-ok-init--node-list-refresh))
-
 (provide 'orp-ok-init)
 ;;; orp-ok-init.el ends here
