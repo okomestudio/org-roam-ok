@@ -6,7 +6,7 @@
 ;; URL: https://github.com/okomestudio/org-roam-plugin-ok
 ;; Version: 0.1
 ;; Keywords: org-mode, roam, plug-in
-;; Package-Requires: ((emacs "29.1") (org "9.4") (dash "2.13") (adaptive-wrap "0.8"))
+;; Package-Requires: ((emacs "29.1") (org "9.4") (org-roam "2.2.2") (adaptive-wrap "0.8"))
 ;;
 ;;; Commentary:
 ;;
@@ -94,6 +94,11 @@ The output expression should be sanitized for the shell use."
             (org-roam-unlinked-references--file-glob-args) " "
             (org-roam-unlinked-references--title-regex titles) " "
             (shell-quote-argument org-roam-directory)))
+
+  ;; NOTE: The following function replaces
+  ;; `org-roam-unlinked-references-section' in the patch submitted as
+  ;; a pull request. Here, a different function name is given in order
+  ;; to allow use of both implementations side-by-side.
 
   (defun orp-ok-ja-unlinked-references-section (node)
     "The unlinked references section for NODE.

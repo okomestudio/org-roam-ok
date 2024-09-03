@@ -6,7 +6,7 @@
 ;; URL: https://github.com/okomestudio/org-roam-plugin-ok
 ;; Version: 0.1
 ;; Keywords: org-mode, roam, plug-in
-;; Package-Requires: ((emacs "29.1") (org "9.4") (dash "2.13") (adaptive-wrap "0.8"))
+;; Package-Requires: ((emacs "29.1") (org "9.4") (org-roam "2.2.2") (dash "2.13") (adaptive-wrap "0.8"))
 ;;
 ;;; Commentary:
 ;;
@@ -66,7 +66,7 @@
 
   ;; TITLE EXTRACTION REGEX
   (advice-add
-   'org-roam-unlinked-references--title-regex
+   #'org-roam-unlinked-references--title-regex
    :override
    (lambda (titles)
      (let ((bounded-re (substring (mapconcat
@@ -99,7 +99,7 @@
 
   ;; TITLE SANITIZATION
   (advice-add
-   'org-roam-unlinked-references--apply-word-boundary-re
+   #'org-roam-unlinked-references--apply-word-boundary-re
    :around
    (lambda (orig-func title)
      (let* (;; Expand quote variants:
@@ -116,7 +116,7 @@
 
   ;; PREDICATE FOR UNLINKED REFERENCE CHECK
   (advice-add
-   'org-roam-unlinked-references--result-filter-p
+   #'org-roam-unlinked-references--result-filter-p
    :override
    (lambda (matched-text matched-file row col titles node)
      (let ((linked-re (format "\\[\\[id:%s\\]\\[.*\\]\\]" (org-roam-node-id node))))
@@ -140,7 +140,7 @@
 
   ;; PREVIEW LINE RENDERING
   (advice-add
-   'org-roam-unlinked-references-preview-line
+   #'org-roam-unlinked-references-preview-line
    :around
    (lambda (orig-fun file row col file-prev row-prev col-prev)
      (if (and (string= file file-prev) (= row row-prev))
