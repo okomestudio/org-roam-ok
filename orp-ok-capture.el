@@ -6,7 +6,7 @@
 ;; URL: https://github.com/okomestudio/org-roam-plugin-ok
 ;; Version: 0.1
 ;; Keywords: org-mode, roam, plug-in
-;; Package-Requires: ((emacs "29.1") (org "9.4") (dash "2.13") (adaptive-wrap "0.8") (s "1.13.1"))
+;; Package-Requires: ((emacs "29.1") (org "9.4") (org-roam "2.2.2") (s "1.13.1"))
 ;;
 ;;; Commentary:
 ;;
@@ -17,7 +17,7 @@
 (require 's)
 
 (with-eval-after-load 'org-roam-capture
-  (defun orp-capture-templates-merge (templates)
+  (defun orp-ok-capture-templates-merge (templates)
     "Merge org roam capture TEMPLATES to `org-roam-capture-templates'.x"
     (let ((old-items (sort org-roam-capture-templates
                            (lambda (x y) (s-less? (car x) (car y)))))
