@@ -48,6 +48,15 @@
   (defvar orp-ok-node--cache-in-memory-file (make-hash-table :test 'equal)
     "In-memory cache, mapping a file to the ID of its top-level node.")
 
+  (defun orp-ok-node--cache-in-memory-file-get (file)
+    (gethash file orp-ok-node--cache-in-memory-file))
+
+  (defun orp-ok-node--cache-in-memory-file-save (file node-id)
+    (puthash file node-id orp-ok-node--cache-in-memory-file))
+
+  (defun orp-ok-node--cache-in-memory-file-remove (file)
+    (remhash file orp-ok-node--cache-in-memory-file))
+
   (defun orp-ok-node--init-cache-in-memory-file ()
     (dolist (row (orp-ok-node--all-file-nodes-and-ids))
       (puthash (car row) (cadr row) orp-ok-node--cache-in-memory-file)))
@@ -65,11 +74,11 @@
            (level (org-roam-node-level node))
            (file-node-id (when (< 0 level)
                            (let* ((file (org-roam-node-file node))
-                                  (id (gethash file orp-ok-node--cache-in-memory-file)))
+                                  (id (orp-ok-node--cache-in-memory-file-get file)))
                              (if id
                                  id
                                (setq id (orp-ok-node--file-node-id node))
-                               (puthash file id orp-ok-node--cache-in-memory-file)
+                               (orp-ok-node--cache-in-memory-file-save file id)
                                id))))
            (file-parent-node-id
             (when (= 0 level)
@@ -91,6 +100,7 @@
   (defun orp-ok-node--cache-in-memory-maybe-remove ()
     (let ((file buffer-file-name))
       (when (string= (file-name-extension file) "org")
+        (orp-ok-node--cache-in-memory-file-remove file)
         (dolist (node-id (orp-ok-node--all-node-ids-within-file file))
           (orp-ok-node--cache-in-memory-remove node-id)))))
 
