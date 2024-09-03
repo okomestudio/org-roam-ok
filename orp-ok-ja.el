@@ -6,7 +6,7 @@
 ;; URL: https://github.com/okomestudio/org-roam-plugin-ok
 ;; Version: 0.1
 ;; Keywords: org-mode, roam, plug-in
-;; Package-Requires: ((emacs "29.1") (org "9.4") (org-roam "2.2.2") (dash "2.13") (adaptive-wrap "0.8"))
+;; Package-Requires: ((emacs "29.1") (org "9.4") (org-roam "2.2.2") (dash "2.13") (adaptive-wrap "0.8") (ok-plural "0.1"))
 ;;
 ;;; Commentary:
 ;;
@@ -16,6 +16,7 @@
 
 (require 'orp-ok-ja-patch) ;; uncomment this line when using without patch
 (require 'adaptive-wrap)
+(require 'ok-plural)
 
 (with-eval-after-load 'org-roam-mode
   ;; WORD BOUNDARY
@@ -69,29 +70,35 @@
    #'org-roam-unlinked-references--title-regex
    :override
    (lambda (titles)
-     (let ((bounded-re (substring (mapconcat
-                                   #'org-roam-unlinked-references--apply-word-boundary-re
-                                   titles "")
-                                  1))
+     (let* (;; Extend titles with their plurals
+            (titles (flatten-list (mapcar (lambda (w)
+                                            `(,w ,(ok-plural-pluralize w)))
+                                          titles)))
 
-           ;; For variable-lengths lookbehinds in PCRE, see:
-           ;;
-           ;;   - www.drregex.com/2019/02/variable-length-lookbehinds-actually.html
-           ;;
-           ;; `plb' is for positive lookbehind; `nlb' is for negative lookbehind.
-           (plb "(?=(?'a'[\\s\\S]*))(?'b'(%s)(?=\\k'a'\\z)|(?<=(?=x^|(?&b))[\\s\\S]))")
-           (nlb "(?!(?=(?<a>[\\s\\S]*))(?<b>(%s)(?=\\k<a>\\z)|(?<=(?=x^|(?&b))[\\s\\S])))")
+            ;; Apply word boundaries to each title
+            (bounded-re (substring (mapconcat
+                                    #'org-roam-unlinked-references--apply-word-boundary-re
+                                    titles "")
+                                   1))
 
-           ;; The list of substrings for negative matching:
-           (lines-to-ignore '("PYTHONDONTWRITEBYTECODE=1 "
-                              "begin_src.+"
-                              "export_hugo_bundle:.+"
-                              "filetags:.+"
-                              "hugo_bundle:.+"
-                              "hugo_tags:.+"
-                              "parent:.+"
-                              "property:.+"
-                              "transclude:.+")))
+            ;; For variable-lengths lookbehinds in PCRE, see:
+            ;;
+            ;;   - www.drregex.com/2019/02/variable-length-lookbehinds-actually.html
+            ;;
+            ;; `plb' is for positive lookbehind; `nlb' is for negative lookbehind.
+            (plb "(?=(?'a'[\\s\\S]*))(?'b'(%s)(?=\\k'a'\\z)|(?<=(?=x^|(?&b))[\\s\\S]))")
+            (nlb "(?!(?=(?<a>[\\s\\S]*))(?<b>(%s)(?=\\k<a>\\z)|(?<=(?=x^|(?&b))[\\s\\S])))")
+
+            ;; The list of substrings for negative matching:
+            (lines-to-ignore '("PYTHONDONTWRITEBYTECODE=1 "
+                               "begin_src.+"
+                               "export_hugo_bundle:.+"
+                               "filetags:.+"
+                               "hugo_bundle:.+"
+                               "hugo_tags:.+"
+                               "parent:.+"
+                               "property:.+"
+                               "transclude:.+")))
        (format "'\\[\\[id:[0-9a-f-]+\\]\\[[^][]*(%s)[^][]*\\]\\]|%s(%s)'"
                bounded-re
                (format nlb (string-join lines-to-ignore "|"))

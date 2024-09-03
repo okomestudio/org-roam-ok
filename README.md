@@ -24,7 +24,11 @@ To install via `use-package`, have the following lines in your `init.el`:
 ``` emacs-lisp
 (use-package org-roam-plugin-ja
     :straight (:host github :repo "okomestudio/org-roam-plugin-ok")
-    :demand t)
+    :demand t
+    :init
+    (use-package ok-plural
+    :straight (:host github :repo "okomestudio/ok-plural.el")
+    :demand t))
 ```
 
 ## Usage
