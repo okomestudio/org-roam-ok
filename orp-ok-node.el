@@ -227,7 +227,7 @@
 
   (cl-defmethod org-roam-node-slug ((node org-roam-node))
     "Return the slug of NODE."
-    (orp-string-to-org-slug (org-roam-node-title node)))
+    (orp-ok-string-to-org-slug (org-roam-node-title node)))
 
   ;; Interactive functions
 
