@@ -16,6 +16,14 @@
 
 (require 'dash)
 
+(defun orp-ok-ensure-all-headings-with-ids ()
+  "Ensure all headings have IDs."
+  (interactive)
+  (save-excursion
+    (goto-char (point-max))
+    (while (outline-previous-heading)
+      (org-id-get-create))))
+
 (defun orp-ok-extract-subtree-to-subdir ()
   "Extract the subtree to a new Org file within the current directory."
   (interactive)
