@@ -39,6 +39,16 @@
   (remove-if (lambda (x) (string= "" x))
              (string-split (cadar (org-collect-keywords '("filetags"))) ":")))
 
+(defun orp-ok-link-get (&optional arg)
+  "Extract URL from org-mode link and add it to kill ring.
+See emacs.stackexchange.com/a/60555/599."
+  (interactive "P")
+  (let* ((link (org-element-lineage (org-element-context) '(link) t))
+         (type (org-element-property :type link))
+         (url (org-element-property :path link))
+         (url (concat type ":" url)))
+    (kill-new url)))
+
 (defun orp-ok-string-to-org-slug (title)
   "Turn TITLE into its '-'-delimited slug.
 
