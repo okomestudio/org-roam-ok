@@ -17,8 +17,8 @@
 (require 's)
 
 (with-eval-after-load 'org-roam-capture
-  (defun orp-ok-capture-templates-merge (templates)
-    "Merge org roam capture TEMPLATES to `org-roam-capture-templates'.x"
+  (defun ooc-templates-merge (templates)
+    "Merge org roam capture TEMPLATES to `org-roam-capture-templates'."
     (let ((old-items (sort org-roam-capture-templates
                            (lambda (x y) (s-less? (car x) (car y)))))
           (new-items (sort templates
@@ -36,4 +36,8 @@
       (setopt org-roam-capture-templates result))))
 
 (provide 'orp-ok-capture)
+
+;; Local Variables:
+;; read-symbol-shorthands: (("ooc" . "orp-ok-capture"))
+;; End:
 ;;; orp-ok-capture.el ends here
