@@ -47,6 +47,39 @@
   (remove-if (lambda (x) (string= "" x))
              (string-split (cadar (org-collect-keywords '("filetags"))) ":")))
 
+(defun orp-ok-interpolate-leaf-nodes-for-export ()
+  "Extrapolate leaf heading nodes for export.
+When invoked within an Org buffer, the headings are traversed in
+its copy, each leaf heading expanded with the body of the target
+node."
+  (interactive)
+  (let ((tmp-buffer (org-export-copy-buffer)))
+    (with-current-buffer tmp-buffer
+      (beginning-of-buffer)
+      (while (outline-next-heading)
+        (while (org-goto-first-child) t)
+        (end-of-line)
+        (backward-char)
+        (when (link-hint--org-link-at-point-p)  ; missing function?
+          (let ((has-content nil))
+            (save-excursion
+              (org-open-at-point +1)
+              (beginning-of-line)
+              (if (eq ?* (char-after))
+                  (setq has-content t))
+              (with-current-buffer (current-buffer)
+                (org-preserve-local-variables
+                 (let* ((end (org-end-of-subtree t t)))
+                   (previous-line)
+                   (org-back-to-heading)
+                   (copy-region-as-kill (re-search-forward "^\\s-*$") end)))
+                (kill-buffer)))
+            (end-of-line)
+            (org-return-and-maybe-indent)
+            (when has-content
+              (org-yank))))))
+    (switch-to-buffer tmp-buffer)))
+
 (defun orp-ok-link-get (&optional arg)
   "Extract URL from org-mode link and add it to kill ring.
 See emacs.stackexchange.com/a/60555/599."
