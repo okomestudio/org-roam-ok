@@ -36,11 +36,10 @@
            (directory (file-name-directory
                        (string-replace org-roam-directory
                                        ""
-                                       parent-file)))
-
-           (org-roam-extract-new-file-path (file-name-concat directory
-                                                             "${slug}.org")))
-      (call-interactively #'org-roam-extract-subtree))))
+                                       parent-file))))
+      (setq org-roam-extract-new-file-path (file-name-concat directory
+                                                             "${slug}.org"))))
+  (call-interactively #'org-roam-extract-subtree))
 
 (defun orp-ok-filetags ()
   "Get filetags from the current node."
