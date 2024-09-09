@@ -22,6 +22,7 @@
 
 ;;;###autoload
 (defun orp-ok-version ()
+  "Show the package version."
   (interactive)
   (message "0.1"))
 

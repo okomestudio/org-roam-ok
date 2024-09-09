@@ -15,25 +15,25 @@
 ;;; Code:
 
 (require 's)
+(require 'org-roam-capture)
 
-(with-eval-after-load 'org-roam-capture
-  (defun ooc-templates-merge (templates)
-    "Merge org roam capture TEMPLATES to `org-roam-capture-templates'."
-    (let ((old-items (sort org-roam-capture-templates
-                           (lambda (x y) (s-less? (car x) (car y)))))
-          (new-items (sort templates
-                           (lambda (x y) (s-less? (car x) (car y)))))
-          result)
-      (while (and old-items new-items)
-        (if (s-less? (caar old-items) (caar new-items))
-            (setq result (append result (list (pop old-items))))
-          (if (s-equals? (caar old-items) (caar new-items))
-              (progn
-                (setq result (append result (list (pop new-items))))
-                (pop old-items))
-            (setq result (append result (list (pop new-items)))))))
-      (setq result (append result old-items new-items))
-      (setopt org-roam-capture-templates result))))
+(defun ooc-templates-merge (templates)
+  "Merge org roam capture TEMPLATES to `org-roam-capture-templates'."
+  (let ((old-items (sort org-roam-capture-templates
+                         (lambda (x y) (s-less? (car x) (car y)))))
+        (new-items (sort templates
+                         (lambda (x y) (s-less? (car x) (car y)))))
+        result)
+    (while (and old-items new-items)
+      (if (s-less? (caar old-items) (caar new-items))
+          (setq result (append result (list (pop old-items))))
+        (if (s-equals? (caar old-items) (caar new-items))
+            (progn
+              (setq result (append result (list (pop new-items))))
+              (pop old-items))
+          (setq result (append result (list (pop new-items)))))))
+    (setq result (append result old-items new-items))
+    (setopt org-roam-capture-templates result)))
 
 (provide 'orp-ok-capture)
 
