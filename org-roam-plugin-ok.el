@@ -19,6 +19,7 @@
 (require 'orp-ok-mode)
 (require 'orp-ok-node)
 (require 'orp-ok-ja)
+(require 'orp-ok-org)
 
 ;;;###autoload
 (defun orp-ok-version ()
