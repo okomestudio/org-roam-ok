@@ -1,7 +1,7 @@
 # org-roam-plugin-ok
 
-An [org-roam](https://github.com/org-roam/org-roam) plug-in for better
-PKM in Emacs.
+An [org-roam](https://github.com/org-roam/org-roam) plug-in minor mode
+for better PKM in Emacs.
 
 The enhancements include:
 
@@ -11,9 +11,10 @@ The enhancements include:
 - Japanese-aware unlinked references parsing
 - Use of hyphen for title slug
 - Automatic creation of missing parent directories
+- In-memory caching for faster node lookup
 - etc.
 
-This is a packaged version of my customization of org-roam. As the
+This is a packaged version of my `org-roam` customization. As the
 related `init.el` section has grown large, I turned it into a package
 to tidy up the initialization.
 
@@ -22,14 +23,20 @@ to tidy up the initialization.
 To install via `use-package`, have the following lines in your `init.el`:
 
 ``` emacs-lisp
-(use-package org-roam-plugin-ja
-    :straight (:host github :repo "okomestudio/org-roam-plugin-ok")
-    :demand t
-    :init
-    (use-package ok-plural
+(use-package org-roam-plugin-ok
+  :straight (:host github :repo "okomestudio/org-roam-plugin-ok")
+  :init
+  (use-package ok-plural
     :straight (:host github :repo "okomestudio/ok-plural.el")
-    :demand t))
+    :demand t)
+  (org-roam-plugin-ok-on-idle-init-setup))
 ```
+
+Running the `org-roam-plugin-ok-on-idle-init-setup` function is
+optional; it simply load the minor mode and fill the in-memory cache
+to speed up the very first node query. Otherwise, use the
+`org-roam-plugin-ok-mode` function explicitly to enable the minor
+mode.
 
 ## Usage
 
@@ -48,7 +55,3 @@ buffer, add `orp-ok-ja-unlinked-refrences-section` to the
 
 The feature is named `org-roam-plugin-ok`, but the shorter prefix
 `orp-ok` is used within the code base.
-
-## TODOs
-
-- [ ] Make the module a minor mode

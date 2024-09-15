@@ -17,6 +17,7 @@
 (require 'orp-ok-utils)
 (require 'marginalia)
 (require 'org-roam-node)
+(require 'org-roam-timestamps)
 
 ;;; The org-roam cache layer (sqlite)
 (defun oon--all-node-ids-within-file (file)
@@ -207,8 +208,6 @@
                                    :test 'equal))))
     (when tags
       (format "#%s#" (string-join tags "#")))))
-
-(require 'org-roam-timestamps)
 
 (cl-defmethod org-roam-node-orp-timestamp ((node org-roam-node))
   (let* ((inhibit-message t)
