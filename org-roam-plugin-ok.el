@@ -22,6 +22,10 @@
 (defvar org-roam-plugin-ok-version "0.1"
   "Package version.")
 
+(defcustom org-roam-plugin-ok-on-idle-delay 60
+  "Idle delay before running on-idle initializer."
+  :group 'org)
+
 ;; On-idle initialization
 
 (defvar org-roam-plugin-ok--on-idle-timer nil
@@ -47,7 +51,9 @@
   (when org-roam-plugin-ok--on-idle-timer
     (cancel-timer org-roam-plugin-ok--on-idle-timer))
   (setq org-roam-plugin-ok--on-idle-timer
-        (run-with-idle-timer 10 nil #'org-roam-plugin-ok--init-on-idle)))
+        (run-with-idle-timer org-roam-plugin-ok-on-idle-delay
+                             nil
+                             #'org-roam-plugin-ok--init-on-idle)))
 
 ;;;###autoload
 (defun org-roam-plugin-ok-on-idle-init-setup ()

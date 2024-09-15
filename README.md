@@ -51,6 +51,12 @@ buffer, add `orp-ok-ja-unlinked-refrences-section` to the
               #'orp-ok-ja-unlinked-references-section))
 ```
 
+## Customization
+
+- `org-roam-plugin-ok-on-idle-delay` (default: 60): Idle time delay in
+  second before the on-idle initializer runs when
+  `org-roam-plugin-ok-on-idle-init-setup` has been run
+
 ## Development
 
 The feature is named `org-roam-plugin-ok`, but the shorter prefix
