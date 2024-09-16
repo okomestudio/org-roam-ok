@@ -66,13 +66,28 @@
     (setopt org-roam-unlinked-references-word-boundary-re word-boundary-re-strict))
 
   ;; TITLE EXTRACTION REGEX
+  (defun orp-ok-ja--pluralize (title)
+    "Pluralize noun(s) in TITLE."
+    (let* ((tokens (string-split title " "))
+           (pluralized-tokens (mapcar (lambda (t)
+                                        (ok-plural-pluralize t))
+                                      tokens)))
+      ;; TODO: Expand the action based on permutations, not just the last token
+      (string-join (append (butlast tokens)
+                           `(,(cond
+                               ((car (last pluralized-tokens))
+                                (car (last pluralized-tokens)))
+                               (t (car (last tokens))))))
+                   " ")))
+
   (advice-add
    #'org-roam-unlinked-references--title-regex
    :override
    (lambda (titles)
      (let* (;; Extend titles with their plurals
             (titles (flatten-list (mapcar (lambda (w)
-                                            `(,w ,(ok-plural-pluralize w)))
+                                            (let ((p (orp-ok-ja--pluralize w)))
+                                              (if p `(,w ,p) `(,w))))
                                           titles)))
 
             ;; Apply word boundaries to each title
