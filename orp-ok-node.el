@@ -151,27 +151,21 @@
 
 (defun oon--title-aux-get (node)
   "Get the auxiliary title info for NODE."
-  (let ((title-or-alias (org-roam-node-title node)))
+  (let ((node-id (org-roam-node-id node))
+        (title-or-alias (org-roam-node-title node))
+        (alias-delimiter " = ")
+        (section-delimiter " ❬ ")
+        sections)
     (if (member title-or-alias (org-roam-node-aliases node))
         ;; `node' may have its title replaced with an alias, so pull
         ;; the title from the original node:
-        (list " = " (org-roam-node-title (oon--from-id (org-roam-node-id node))))
-      (let ((section-delimiter " ❬ ")
-            sections)
-        (setq sections
-              (if (eq 0 (org-roam-node-level node))
-                  ;; File-level node
-                  (let* ((n (oon--from-id (org-roam-node-id node)))
-                         (parent-titles (oon--parent-titles n)))
-                    (if parent-titles
-                        parent-titles))
-                ;; Non-file-level node
-                (let* ((p (oon--file-node-from-id (org-roam-node-id node)))
-                       (parent-titles (oon--parent-titles p)))
-                  (or parent-titles
-                      `(,(org-roam-node-file-title node))))))
-        (flatten-list (mapcar (lambda (x) `(,section-delimiter ,x))
-                              sections))))))
+        (list alias-delimiter (org-roam-node-title (oon--from-id node-id)))
+      (setq sections
+            (pcase (org-roam-node-level node)  ; 0 for file-level node
+              (0 (oon--parent-titles (oon--from-id node-id)))
+              (_ (or (oon--parent-titles (oon--file-node-from-id node-id))
+                     `(,(org-roam-node-file-title node))))))
+      (flatten-list (mapcar (lambda (x) `(,section-delimiter ,x)) sections)))))
 
 (defun oon--title-aux-render (title-aux)
   (if (not title-aux)
