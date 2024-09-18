@@ -161,7 +161,8 @@
         (setq sections
               (if (eq 0 (org-roam-node-level node))
                   ;; File-level node
-                  (let ((parent-titles (oon--parent-titles node)))
+                  (let* ((n (oon--from-id (org-roam-node-id node)))
+                         (parent-titles (oon--parent-titles n)))
                     (if parent-titles
                         parent-titles))
                 ;; Non-file-level node
