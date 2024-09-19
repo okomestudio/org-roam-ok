@@ -33,7 +33,7 @@ To install via `use-package`, have the following lines in your `init.el`:
 ```
 
 Running the `org-roam-plugin-ok-on-idle-init-setup` function is
-optional; it simply load the minor mode and fill the in-memory cache
+optional; it simply loads the minor mode and fill the in-memory cache
 to speed up the very first node query. Otherwise, use the
 `org-roam-plugin-ok-mode` function explicitly to enable the minor
 mode.
@@ -61,3 +61,7 @@ buffer, add `orp-ok-ja-unlinked-refrences-section` to the
 
 The feature is named `org-roam-plugin-ok`, but the shorter prefix
 `orp-ok` is used within the code base.
+
+## TODOs
+
+- [ ] Document enhancements in more detail

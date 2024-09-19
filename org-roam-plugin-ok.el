@@ -4,13 +4,29 @@
 ;;
 ;; Author: Taro Sato <okomestudio@gmail.com>
 ;; URL: https://github.com/okomestudio/org-roam-plugin-ok
-;; Version: 0.1
+;; Version: 0.2
 ;; Keywords: org-mode, roam, plug-in
-;; Package-Requires: ((emacs "29.1") (org "9.4") (dash "2.13") (adaptive-wrap "0.8"))
+;; Package-Requires: ((emacs "29.1") (org "9.7") (org-roam "2.2.2") (adaptive-wrap "0.8") (dash "2.13") (marginalia "1.6") (ok-plural "0.1") (org-roam-timestamps "1.0.0") (s "1.13.1"))
+;;
+;;; License:
+;;
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;;; Commentary:
 ;;
-;; This is the top-level module.
+;; The `org-roam-plugin-ok' mode is a plugin to enhance `org-roam' in
+;; several ways. See the repository README for detail.
 ;;
 ;;; Code:
 
