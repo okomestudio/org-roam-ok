@@ -23,20 +23,30 @@ to tidy up the initialization.
 To install via `use-package`, have the following lines in your `init.el`:
 
 ``` emacs-lisp
+(use-package org-roam-timestamps
+  :after org-roam)
+
+(use-package ok-plural
+  :straight (ok-plural :host github :repo "okomestudio/ok-plural.el"))
+
 (use-package org-roam-plugin-ok
   :straight (:host github :repo "okomestudio/org-roam-plugin-ok")
-  :init
-  (use-package ok-plural
-    :straight (:host github :repo "okomestudio/ok-plural.el")
-    :demand t)
-  (org-roam-plugin-ok-on-idle-init-setup))
+  :init (org-roam-plugin-ok-on-idle-init-setup))
 ```
 
 Running the `org-roam-plugin-ok-on-idle-init-setup` function is
 optional; it simply loads the minor mode and fill the in-memory cache
 to speed up the very first node query. Otherwise, use the
 `org-roam-plugin-ok-mode` function explicitly to enable the minor
-mode.
+mode, e.g.,
+
+``` emacs-lisp
+(use-package org-roam
+  ...
+  :config
+  ...
+  (org-roam-plugin-ok-mode 1))
+```
 
 ## Usage
 
@@ -65,3 +75,4 @@ The feature is named `org-roam-plugin-ok`, but the shorter prefix
 ## TODOs
 
 - [ ] Document enhancements in more detail
+- [ ] Make `org-roam-timestamps` dependency optional
