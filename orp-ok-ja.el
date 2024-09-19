@@ -78,8 +78,8 @@
   (defun orp-ok-ja--pluralize (title)
     "Pluralize noun(s) in TITLE."
     (let* ((tokens (string-split title " "))
-           (pluralized-tokens (mapcar (lambda (t)
-                                        (ok-plural-pluralize t))
+           (pluralized-tokens (mapcar (lambda (token)
+                                        (ok-plural-pluralize token))
                                       tokens)))
       ;; TODO: Expand the action based on permutations, not just the last token
       (string-join (append (butlast tokens)
