@@ -229,9 +229,11 @@
                   (org-roam-node-file-mtime node))))
     (marginalia--time mtime)))
 
-(cl-defmethod org-roam-node-slug ((node org-roam-node))
-  "Return the slug of NODE."
-  (orp-ok-string-to-org-slug (org-roam-node-title node)))
+(with-eval-after-load 'org-roam-node
+  ;; NOTE: To ensure *override*, need to eval after `org-roam-node' gets loaded
+  (cl-defmethod org-roam-node-slug ((node org-roam-node))
+    "Return the slug of NODE."
+    (orp-ok-string-to-org-slug (org-roam-node-title node))))
 
 ;; Interactive functions
 
