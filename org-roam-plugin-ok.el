@@ -83,6 +83,8 @@
   (require 'orp-ok-capture)
   (require 'orp-ok-mode)
   (require 'orp-ok-node)
+  (with-eval-after-load 'org-roam-gt
+    (require 'orp-ok-node-gt))
   (require 'orp-ok-ja)
   (require 'orp-ok-org))
 
