@@ -77,18 +77,27 @@
   (org-roam-plugin-ok--on-idle-init-scheduler)
   (add-hook 'post-command-hook #'org-roam-plugin-ok--on-idle-init-scheduler))
 
+(defun org-roam-plugin-ok-activate ()
+  "Activate `org-roam-plugin-ok-mode'."
+  (require 'orp-ok-utils)
+  (require 'orp-ok-capture)
+  (require 'orp-ok-mode)
+  (require 'orp-ok-node)
+  (require 'orp-ok-ja)
+  (require 'orp-ok-org))
+
+(defun org-roam-plugin-ok-deactivate ()
+  "Deactivate `org-roam-plugin-ok-mode'."
+  nil)
+
 ;;;###autoload
 (define-minor-mode org-roam-plugin-ok-mode
   "The `org-roam-plugin-ok-mode' minor mode."
   :global nil
   :group 'org-roam-plugin-ok-mode
-  (when org-roam-plugin-ok-mode
-    (require 'orp-ok-utils)
-    (require 'orp-ok-capture)
-    (require 'orp-ok-mode)
-    (require 'orp-ok-node)
-    (require 'orp-ok-ja)
-    (require 'orp-ok-org)))
+  (if org-roam-plugin-ok-mode
+      (org-roam-plugin-ok-activate)
+    (org-roam-plugin-ok-deactivate)))
 
 (provide 'org-roam-plugin-ok)
 ;;; org-roam-plugin-ok.el ends here
