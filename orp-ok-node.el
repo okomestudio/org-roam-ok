@@ -204,13 +204,16 @@
 
 ;;; Public functions and methods
 
-;; Node accessors
+;; Node attribute accessors
 
-(cl-defmethod org-roam-node-orp-title ((node org-roam-node))
+(defun oon--title (node)
   (concat (org-roam-node-title node)
           (oon--title-aux-render (oon--title-aux-get node))))
 
-(cl-defmethod org-roam-node-orp-tags ((node org-roam-node))
+(cl-defmethod org-roam-node-orp-title ((node org-roam-node))
+  (oon--title node))
+
+(defun oon--tags (node)
   (let ((tags (if (eq 0 (org-roam-node-level node))
                   ;; File-level node
                   (org-roam-node-tags node)
@@ -221,7 +224,10 @@
     (when tags
       (format "#%s#" (string-join tags "#")))))
 
-(cl-defmethod org-roam-node-orp-timestamp ((node org-roam-node))
+(cl-defmethod org-roam-node-orp-tags ((node org-roam-node))
+  (oon--tags node))
+
+(defun oon--timestamp (node)
   (let* ((inhibit-message t)
          (mtime (cdr (assoc "MTIME" (org-roam-node-properties node))))
          (mtime (if mtime
@@ -229,7 +235,10 @@
                   (org-roam-node-file-mtime node))))
     (format-time-string "%Y-%m-%d" mtime)))
 
-(cl-defmethod org-roam-node-orp-timestamp-marginalia ((node org-roam-node))
+(cl-defmethod org-roam-node-orp-timestamp ((node org-roam-node))
+  (oon--timestamp node))
+
+(defun oon--timestamp-marginalia (node)
   (let* ((inhibit-message t)
          (mtime (cdr (assoc "MTIME" (org-roam-node-properties node))))
          (mtime (if mtime
@@ -237,11 +246,17 @@
                   (org-roam-node-file-mtime node))))
     (marginalia--time mtime)))
 
+(cl-defmethod org-roam-node-orp-timestamp-marginalia ((node org-roam-node))
+  (oon--timestamp-marginalia node))
+
+(defun oon--slug (node)
+  (orp-ok-string-to-org-slug (org-roam-node-title node)))
+
 (with-eval-after-load 'org-roam-node
   ;; NOTE: To ensure *override*, need to eval after `org-roam-node' gets loaded
   (cl-defmethod org-roam-node-slug ((node org-roam-node))
     "Return the slug of NODE."
-    (orp-ok-string-to-org-slug (org-roam-node-title node))))
+    (oon--slug node)))
 
 ;; Interactive functions
 
