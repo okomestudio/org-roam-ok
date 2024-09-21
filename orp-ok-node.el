@@ -28,6 +28,10 @@
 (require 'org-roam-node)
 (require 'org-roam-timestamps)
 
+(defcustom oon-use-cache-in-memory t
+  "Set non-nil to use in-memory cache, set nil to disable it."
+  :group 'org-roam-plugin-ok)
+
 ;;; The org-roam cache layer (sqlite)
 (defun oon--all-node-ids-within-file (file)
   "Get the IDs of all nodes within FILE."
@@ -61,10 +65,12 @@
   "In-memory cache, mapping a file to the ID of its top-level node.")
 
 (defun oon--cache-in-memory-file-get (file)
-  (gethash file oon--cache-in-memory-file))
+  (when oon-use-cache-in-memory
+    (gethash file oon--cache-in-memory-file)))
 
 (defun oon--cache-in-memory-file-save (file node-id)
-  (puthash file node-id oon--cache-in-memory-file))
+  (when oon-use-cache-in-memory
+    (puthash file node-id oon--cache-in-memory-file)))
 
 (defun oon--cache-in-memory-file-remove (file)
   (remhash file oon--cache-in-memory-file))
@@ -78,7 +84,8 @@
 
 (defun oon--cache-in-memory-get (node-id)
   "Get the node for NODE-ID from the in-memory cache."
-  (cdr (gethash node-id oon--cache-in-memory)))
+  (when oon-use-cache-in-memory
+    (cdr (gethash node-id oon--cache-in-memory))))
 
 (defun oon--cache-in-memory-save (node)
   "Save NODE to the in-memory cache."
@@ -102,7 +109,8 @@
                  "\\1"
                  parent)))))
          (item `(,node ,file-node-id ,file-parent-node-id)))
-    (puthash node-id `(,(float-time) ,@item) oon--cache-in-memory)
+    (when oon-use-cache-in-memory
+      (puthash node-id `(,(float-time) ,@item) oon--cache-in-memory))
     item))
 
 (defun oon--cache-in-memory-remove (node-id)
