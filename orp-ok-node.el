@@ -221,11 +221,10 @@
                 (cl-set-difference (org-roam-node-tags node)
                                    org-tags-exclude-from-inheritance
                                    :test 'equal))))
-    (when tags
-      (format "#%s#" (string-join tags "#")))))
+    tags))
 
 (cl-defmethod org-roam-node-orp-tags ((node org-roam-node))
-  (oon--tags node))
+  (format "#%s#" (string-join (oon--tags node) "#")))
 
 (defun oon--timestamp (node)
   (let* ((inhibit-message t)
