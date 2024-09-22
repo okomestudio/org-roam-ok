@@ -56,6 +56,46 @@ function is run outside the context of `org-roam-directory'."
           (if (null buffer-existed)
               (kill-buffer buffer)))))))
 
+;;; The parent property
+(defun oon--get-parent-property (node)
+  "Get the parent property of NODE."
+  (let* ((prop (org-roam-node-properties node))
+         (parent (cdr (assoc-string "PARENT" prop)))
+         (extracted (and parent
+                         (replace-regexp-in-string
+                          "\\[\\[id:\\(.+\\)\\]\\[\\([^]]+\\)\\]\\]"
+                          "\\1"
+                          parent))))
+    (cond ((and parent (equal parent extracted))
+           (message "WARNING: Malformed parent (%s) in %s"
+                    parent
+                    (org-roam-node-file node))
+           nil)
+          (t extracted))))
+
+(defun oon--get-parent (&optional node)
+  "Get the parent of NODE if it exists."
+  (cdr (assoc-string "PARENT"
+                     (org-roam-node-properties
+                      (or node
+                          (org-roam-node-at-point))))))
+
+(defun oon-show-parent (node)
+  "Show the parent of NODE if exists."
+  (interactive "P")
+  (let* ((parent (oon--get-parent node)))
+    (if parent
+        (message "Parent: %s" parent)
+      (message "No parent found"))))
+
+(defun oon-visit-parent (node)
+  "Visit parent of given NODE at point, if exists."
+  (interactive "P")
+  (let ((parent (oon--get-parent node)))
+    (if parent
+        (org-link-open-from-string parent)
+      (message "No parent found"))))
+
 ;;; The org-roam cache layer (sqlite)
 (defun oon--all-node-ids-within-file (file)
   "Get the IDs of all nodes within FILE."
@@ -123,15 +163,8 @@ function is run outside the context of `org-roam-directory'."
                              (setq id (oon--file-node-id node))
                              (oon--cache-in-memory-file-save file id)
                              id))))
-         (file-parent-node-id
-          (when (= 0 level)
-            (let* ((prop (org-roam-node-properties node))
-                   (parent (cdr (assoc-string "PARENT" prop))))
-              (when parent
-                (replace-regexp-in-string
-                 "\\[\\[id:\\(.+\\)\\]\\[\\([^]]+\\)\\]\\]"
-                 "\\1"
-                 parent)))))
+         (file-parent-node-id (when (= 0 level)
+                                (oon--get-parent-property node)))
          (item `(,node ,file-node-id ,file-parent-node-id)))
     (when oon-use-cache-in-memory
       (puthash node-id `(,(float-time) ,@item) oon--cache-in-memory))
@@ -281,30 +314,7 @@ function is run outside the context of `org-roam-directory'."
     "Return the slug of NODE."
     (oon--slug node)))
 
-;; Interactive functions
-
-(defun oon--get-parent (&optional node)
-  "Get the parent of NODE if it exists."
-  (cdr (assoc-string "PARENT"
-                     (org-roam-node-properties
-                      (or node
-                          (org-roam-node-at-point))))))
-
-(defun oon-show-parent (node)
-  "Show the parent of NODE if exists."
-  (interactive "P")
-  (let* ((parent (oon--get-parent node)))
-    (if parent
-        (message "Parent: %s" parent)
-      (message "No parent found"))))
-
-(defun oon-visit-parent (node)
-  "Visit parent of given NODE at point, if exists."
-  (interactive "P")
-  (let ((parent (oon--get-parent node)))
-    (if parent
-        (org-link-open-from-string parent)
-      (message "No parent found"))))
+;;; Misc.
 
 (defun oon-fill-caches ()
   "Fill all caches."
