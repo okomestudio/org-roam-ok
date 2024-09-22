@@ -32,6 +32,30 @@
   "Set non-nil to use in-memory cache, set nil to disable it."
   :group 'org-roam-plugin-ok)
 
+(defcustom oon-project-org-file nil
+  "Org file visited to load directory local variables."
+  :group 'org-roam-plugin-ok)
+
+;;; The directory local variables loader
+(defun oon-project-org-file--load (orig-func)
+  "Load dir local variables before ORIG-FUNC.
+Use as an around advice for `org-roam-node-find' to load relevant
+project directory local variables prior to calling it
+interactively. This is useful when the `org-roam-node-find'
+function is run outside the context of `org-roam-directory'."
+  (if (or (org-roam-file-p)
+          (null oon-project-org-file))
+      (call-interactively orig-func)
+    (let* ((file oon-project-org-file)
+           (find-file-hook (remq 'recentf-track-opened-file find-file-hook))
+           (buffer-existed (get-file-buffer file))
+           (buffer (find-file-noselect file)))
+      (with-current-buffer buffer
+        (unwind-protect
+            (call-interactively orig-func)
+          (if (null buffer-existed)
+              (kill-buffer buffer)))))))
+
 ;;; The org-roam cache layer (sqlite)
 (defun oon--all-node-ids-within-file (file)
   "Get the IDs of all nodes within FILE."

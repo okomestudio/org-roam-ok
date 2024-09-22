@@ -86,7 +86,12 @@
   (with-eval-after-load 'org-roam-gt
     (require 'orp-ok-node-gt))
   (require 'orp-ok-ja)
-  (require 'orp-ok-org))
+  (require 'orp-ok-org)
+
+  (advice-add #'org-roam-node-find
+              :around #'orp-ok-node-project-org-file--load)
+  (advice-add #'org-roam-node-insert
+              :around #'orp-ok-node-project-org-file--load))
 
 (defun org-roam-plugin-ok-deactivate ()
   "Deactivate `org-roam-plugin-ok-mode'."
