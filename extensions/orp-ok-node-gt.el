@@ -57,6 +57,20 @@
   "Remove NODE item from the in-memory cache."
   (remhash (org-roam-node-id node) oong--cache-in-memory))
 
+(defun oong--cache-in-memory-clear ()
+  "Clear the in-memory cache."
+  (interactive)
+  (clrhash oong--cache-in-memory))
+
+(defun oong--cache-in-memory-maybe-remove ()
+  (when oong-use-cache-in-memory
+    (let ((file buffer-file-name))
+      (when (string= (file-name-extension file) "org")
+        (let* ((node (org-roam-node-at-point t)))
+          (oong--cache-in-memory-remove node))))))
+
+(add-hook 'after-save-hook #'oong--cache-in-memory-maybe-remove)
+
 (defun oong--recompute-display (total-width node)
   "Recompute display of NODE with TOTAL-WIDTH."
   (let* ((title (orp-ok-node--title node))
@@ -68,7 +82,7 @@
                             (put-text-property 0 1 'invisible t r)
                             (put-text-property (- (length r) 1) (length r)
                                                'invisible t r)
-                            (setq r (propertize r 'face 'org-modern-tag))))
+                            (setq r (propertize r 'face 'highlight))))
                         tags)
                 " "))
          (timestamp (orp-ok-node--timestamp node))
