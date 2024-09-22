@@ -259,15 +259,28 @@
 
 ;; Interactive functions
 
-(defun oon-visit-parent-of-node-at-point (node)
+(defun oon--get-parent (&optional node)
+  "Get the parent of NODE if it exists."
+  (cdr (assoc-string "PARENT"
+                     (org-roam-node-properties
+                      (or node
+                          (org-roam-node-at-point))))))
+
+(defun oon-show-parent (node)
+  "Show the parent of NODE if exists."
+  (interactive "P")
+  (let* ((parent (oon--get-parent node)))
+    (if parent
+        (message "Parent: %s" parent)
+      (message "No parent found"))))
+
+(defun oon-visit-parent (node)
   "Visit parent of given NODE at point, if exists."
   (interactive "P")
-  (let* ((node (or node (org-roam-node-at-point)))
-         (parent (cdr (assoc-string "PARENT"
-                                    (org-roam-node-properties node)))))
+  (let ((parent (oon--get-parent node)))
     (if parent
         (org-link-open-from-string parent)
-      (message "No parent found for this node"))))
+      (message "No parent found"))))
 
 (defun oon-fill-caches ()
   "Fill all caches."
