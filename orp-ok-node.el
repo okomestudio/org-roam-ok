@@ -44,8 +44,8 @@ project directory local variables prior to calling it
 interactively. This is useful when the `org-roam-node-find'
 function is run outside the context of `org-roam-directory'."
   (if (or (org-roam-file-p buffer-file-name)
-          (null oon-project-org-file)
-          (null buffer-file-name))  ; for session within minibuffer
+          (minibufferp)
+          (null oon-project-org-file))
       (progn
         (call-interactively orig-func))
     (let* ((file oon-project-org-file)
