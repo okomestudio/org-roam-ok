@@ -83,12 +83,14 @@ function is run outside the context of `org-roam-directory'."
                           (org-roam-node-at-point))))))
 
 (defun oon-show-parent (node)
-  "Show the parent of NODE if exists."
+  "Show the parent of (file) NODE if exists."
   (interactive "P")
-  (let* ((parent (oon--get-parent node)))
-    (if parent
-        (message "Parent: %s" parent)
-      (message "No parent found"))))
+  (save-mark-and-excursion
+    (beginning-of-buffer)
+    (let* ((parent (oon--get-parent node)))
+      (if parent
+          (message "Parent: %s" parent)
+        (message "No parent found")))))
 
 (defun oon-visit-parent (node)
   "Visit parent of given NODE at point, if exists."
