@@ -40,5 +40,28 @@ properties."
                                    " "))))
       (add-to-list 'org-default-properties keyword))))
 
+;;; org-src
+
+(defun orp-ok-org-src-skip-noweb-refs-on-format (func &rest rest)
+  "Comment out noweb references in Org source edit buffer."
+  (interactive)
+  (let ((noweb-ref-re "<<\\([A-Za-z0-9-_]+\\)>>"))
+    (when (org-src-edit-buffer-p)
+      (save-excursion
+        (beginning-of-buffer)
+        (while (re-search-forward (concat "^" noweb-ref-re) nil t)
+          (replace-match (concat comment-start "<<\\1>>")))))
+
+    (call-interactively func rest)
+
+    (when (org-src-edit-buffer-p)
+      (save-excursion
+        (beginning-of-buffer)
+        (while (re-search-forward (concat "^" comment-start noweb-ref-re) nil t)
+          (replace-match "<<\\1>>"))))))
+
+(with-eval-after-load 'ruff-format
+  (advice-add #'ruff-format-buffer :around 'orp-ok-org-src-skip-noweb-refs-on-format))
+
 (provide 'orp-ok-org)
 ;;; orp-ok-org.el ends here
