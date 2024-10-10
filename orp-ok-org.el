@@ -40,6 +40,34 @@ properties."
                                    " "))))
       (add-to-list 'org-default-properties keyword))))
 
+;;; org-babel
+
+(defun orp-ok-org-babel-run-pytest (&optional arg tangle-default)
+  "Run ob-pytest using the current Python code block.
+If tangle is missing, it will default to TANGLE-DEFAULT if given or
+'t.py' if not given."
+  (interactive)
+  (let* ((params (nth 2 (org-babel-get-src-block-info)))
+         (tangle (alist-get :tangle params))
+         (tangle (if (string= tangle "no")
+                     (or tangle-default "t.py")
+                   tangle))
+         (src-ob-pytest
+          (concat
+           (format "#+begin_src shell :var in=\"%s\" :exports none :results output\n"
+                   tangle)
+           "  ob-pytest \"$in\"\n"
+           "#+end_src\n")))
+    (if (null params)
+        (message "Org Babel source block not found")
+      (org-babel-tangle '(4) tangle)
+      (org-forward-element)
+      (insert src-ob-pytest)
+      (previous-line)
+      (let ((org-confirm-babel-evaluate nil))
+        (org-ctrl-c-ctrl-c))
+      (delete-file tangle))))
+
 ;;; org-src
 
 (defun orp-ok-org-src-skip-noweb-refs-on-format (func &rest rest)
