@@ -66,6 +66,8 @@ If tangle is missing, it will default to TANGLE-DEFAULT if given or
       (previous-line)
       (let ((org-confirm-babel-evaluate nil))
         (org-ctrl-c-ctrl-c))
+      (re-search-forward "#\\+RESULTS:" nil nil 1)
+      (recenter-top-bottom)
       (delete-file tangle))))
 
 ;;; org-src
