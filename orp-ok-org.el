@@ -72,26 +72,39 @@ If tangle is missing, it will default to TANGLE-DEFAULT if given or
 
 ;;; org-src
 
-(defun orp-ok-org-src-skip-noweb-refs-on-format (func &rest rest)
-  "Comment out noweb references in Org source edit buffer."
-  (interactive)
-  (let ((noweb-ref-re "<<\\([A-Za-z0-9-_]+\\)>>"))
-    (when (org-src-edit-buffer-p)
-      (save-excursion
-        (beginning-of-buffer)
-        (while (re-search-forward (concat "^" noweb-ref-re) nil t)
-          (replace-match (concat comment-start "<<\\1>>")))))
+(defcustom orp-ok-org-src-noweb-ref-re "<<\\([A-Za-z0-9_.-]+\\)>>"
+  "Regexp for noweb-ref.")
 
-    (call-interactively func rest)
+(defun orp-ok-org-src--comment-out-noweb-ref (beg end)
+  "Comment out noweb references in Org source edit buffer from BEG to END."
+  (when (org-src-edit-buffer-p)
+    (save-excursion
+      (goto-char beg)
+      (while (re-search-forward (concat "^" orp-ok-org-src-noweb-ref-re)
+                                end t 1)
+        (replace-match (concat comment-start "<<\\1>>"))
+        (setq end (+ end (length comment-start))))))
+  end)
 
-    (when (org-src-edit-buffer-p)
-      (save-excursion
-        (beginning-of-buffer)
-        (while (re-search-forward (concat "^" comment-start noweb-ref-re) nil t)
-          (replace-match "<<\\1>>"))))))
+(defun orp-ok-org-src--uncomment-noweb-ref (beg end)
+  "Uncomment noweb references in Org source edit buffer from BEG to END."
+  (when (org-src-edit-buffer-p)
+    (save-excursion
+      (goto-char beg)
+      (while (re-search-forward (concat "^" comment-start
+                                        orp-ok-org-src-noweb-ref-re)
+                                end t 1)
+        (replace-match "<<\\1>>")))))
 
-(with-eval-after-load 'ruff-format
-  (advice-add #'ruff-format-buffer :around 'orp-ok-org-src-skip-noweb-refs-on-format))
+(defun orp-ok-org-src-reformatter--do-region-ad (func name beg end &rest rest)
+  "Advise reformatter--do-region to ignore noweb-refs."
+  (let ((end (orp-ok-org-src--comment-out-noweb-ref beg end)))
+    (apply func `(,name ,beg ,end ,@rest))
+    (orp-ok-org-src--uncomment-noweb-ref beg end)))
+
+(with-eval-after-load 'org-src
+  (with-eval-after-load 'reformatter
+    (advice-add #'reformatter--do-region :around 'orp-ok-org-src-reformatter--do-region-ad)))
 
 (provide 'orp-ok-org)
 ;;; orp-ok-org.el ends here
