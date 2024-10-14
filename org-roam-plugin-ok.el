@@ -86,7 +86,6 @@
   (with-eval-after-load 'org-roam-gt
     (require 'orp-ok-node-gt))
   (require 'orp-ok-ja)
-  (require 'orp-ok-org)
 
   (advice-add #'org-roam-node-find
               :around #'orp-ok-node-project-org-file--load)
