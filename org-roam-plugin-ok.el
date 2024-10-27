@@ -59,7 +59,7 @@
     (org-roam-node-list)
 
     (org-roam-plugin-ok-mode 1)
-    (orp-ok-node-fill-caches)
+    (orp-ok-node-project-org-file--load #'orp-ok-node-fill-caches)
     (message "Finished org-roam-init-on-idle")))
 
 (defun org-roam-plugin-ok--on-idle-init-scheduler ()

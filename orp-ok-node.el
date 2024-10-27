@@ -37,24 +37,26 @@
   :group 'org-roam-plugin-ok)
 
 ;;; The directory local variables loader
-(defun oon-project-org-file--load (orig-func)
-  "Load dir local variables before ORIG-FUNC.
-Use as an around advice for `org-roam-node-find' to load relevant
-project directory local variables prior to calling it
-interactively. This is useful when the `org-roam-node-find'
-function is run outside the context of `org-roam-directory'."
+(defun oon-project-org-file--load (orig-func &rest rest)
+  "Load directory local variables by visiting an Org file.
+Use as the around advice for function ORIG-FUNC to load relevant
+per-project directory local variables associated with
+`orp-ok-node-project-org-file' prior to calling the function. The
+REST arguments are used for non-interactive invocations. The
+purpose is to make a function like `org-roam-node-find' aware of
+`org-roam-directory' being set outside of the current context."
   (if (or (org-roam-file-p buffer-file-name)
           (minibufferp)
           (null oon-project-org-file))
-      (progn
-        (call-interactively orig-func))
-    (let* ((file oon-project-org-file)
-           (find-file-hook (remq 'recentf-track-opened-file find-file-hook))
-           (buffer-existed (get-file-buffer file))
-           (buffer (find-file-noselect file)))
+      (cond ((called-interactively-p 'any) (call-interactively orig-func))
+            (t (apply orig-func rest)))
+    (let* ((find-file-hook (remq 'recentf-track-opened-file find-file-hook))
+           (buffer-existed (get-file-buffer oon-project-org-file))
+           (buffer (find-file-noselect oon-project-org-file)))
       (with-current-buffer buffer
         (unwind-protect
-            (call-interactively orig-func)
+            (cond ((called-interactively-p 'any) (call-interactively orig-func))
+                  (t (apply orig-func rest)))
           (if (null buffer-existed)
               (kill-buffer buffer)))))))
 
