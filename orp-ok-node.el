@@ -322,7 +322,8 @@ function is run outside the context of `org-roam-directory'."
 
 (defun oon-fill-caches ()
   "Fill all caches."
-  (message "Running orp-ok-node-fill-caches...")
+  (message "Running orp-ok-node-fill-caches (org-roam-directory: %s)"
+           org-roam-directory)
   (oon--cache-in-memory-fill)
   (oon--cache-in-memory-file-fill))
 
