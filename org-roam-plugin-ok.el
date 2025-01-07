@@ -1,6 +1,6 @@
 ;;; org-roam-plugin-ok.el --- Org Roam Plugin  -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2024 Taro Sato
+;; Copyright (C) 2024, 2025 Taro Sato
 ;;
 ;; Author: Taro Sato <okomestudio@gmail.com>
 ;; URL: https://github.com/okomestudio/org-roam-plugin-ok
@@ -87,10 +87,12 @@
     (require 'orp-ok-node-gt))
   (require 'orp-ok-ja)
 
-  (advice-add #'org-roam-node-find
-              :around #'orp-ok-node-project-org-file--load)
-  (advice-add #'org-roam-node-insert
-              :around #'orp-ok-node-project-org-file--load))
+  ;; Wrap these functions so that each will load the project
+  ;; .dir-locals.el before its execution.
+  (dolist (func '(org-roam-node-find
+                  org-roam-node-insert
+                  org-roam-dailies-capture-today))
+    (advice-add func :around #'orp-ok-node-project-org-file--load)))
 
 (defun org-roam-plugin-ok-deactivate ()
   "Deactivate `org-roam-plugin-ok-mode'."
