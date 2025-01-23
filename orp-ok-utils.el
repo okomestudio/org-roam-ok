@@ -145,5 +145,12 @@ This function is used in place of `org-roam-node-slug'."
                                  pairs)))
         (downcase slug)))))
 
+(defun orp-ok-rename-visited-file-from-title ()
+  "Rename the visited file using the slug from the document title."
+  (interactive)
+  (let* ((title (cadr (assoc "TITLE" (org-collect-keywords '("title")))))
+         (slug (orp-ok-string-to-org-slug title)))
+    (rename-visited-file (format "%s.org" slug))))
+
 (provide 'orp-ok-utils)
 ;;; orp-ok-utils.el ends here
