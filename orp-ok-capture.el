@@ -1,6 +1,6 @@
 ;;; orp-ok-capture.el --- Plugin for org-roam-capture  -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2024 Taro Sato
+;; Copyright (C) 2024-2025 Taro Sato
 ;;
 ;;; License:
 ;;
@@ -27,7 +27,13 @@
 (require 'org-roam-capture)
 
 (defun ooc-templates-merge (templates)
-  "Merge org roam capture TEMPLATES to `org-roam-capture-templates'."
+  "Merge TEMPLATES to `org-roam-capture-templates'.
+The TEMPLATES and `org-roam-capture-templates' are sorted by their
+keys (i.e., the CAR of each template in the list) separately, merged,
+and then saved to `org-roam-capture-templates'.
+
+See the documentation for `org-roam-capture-templates' for how to write
+each template."
   (let ((old-items (sort org-roam-capture-templates
                          (lambda (x y) (s-less? (car x) (car y)))))
         (new-items (sort templates

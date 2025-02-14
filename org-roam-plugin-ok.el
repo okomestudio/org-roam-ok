@@ -6,7 +6,7 @@
 ;; URL: https://github.com/okomestudio/org-roam-plugin-ok
 ;; Version: 0.2
 ;; Keywords: org-mode, roam, plug-in
-;; Package-Requires: ((emacs "29.1") (org "9.7") (org-roam "2.2.2") (adaptive-wrap "0.8") (dash "2.13") (marginalia "1.6") (ok-plural "0.1") (org-roam-timestamps "1.0.0") (s "1.13.1"))
+;; Package-Requires: ((emacs "29.1") (org "9.7") (org-roam "20250111.252") (adaptive-wrap "0.8") (dash "2.13") (marginalia "1.6") (ok-plural "0.1") (org-roam-timestamps "1.0.0") (s "1.13.1"))
 ;;
 ;;; License:
 ;;
