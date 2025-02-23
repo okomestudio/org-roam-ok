@@ -19,7 +19,7 @@
 ;;
 ;;; Commentary:
 ;;
-;; This module provides a plugin for `org-roam-gt'.
+;; This module provides a customization/plugin for `org-roam-gt'.
 ;;
 ;;; Code:
 
@@ -73,7 +73,8 @@
 
 (defun oong--recompute-display (total-width node)
   "Recompute display of NODE with TOTAL-WIDTH."
-  (let* ((title (orp-ok-node--title node))
+  (let* ((title (concat (and (featurep 'org-roam-fz) (org-roam-node-fid node))
+                        (orp-ok-node--title node)))
          (tags (or (orp-ok-node--tags node) nil))
          (tags (string-join
                 (mapcar (lambda (s)
