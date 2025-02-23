@@ -152,5 +152,15 @@ This function is used in place of `org-roam-node-slug'."
          (slug (orp-ok-string-to-org-slug title)))
     (rename-visited-file (format "%s.org" slug))))
 
+(defun orp-ok-mv-cwd-to (dest)
+  "Move the current directory under the directory DEST."
+  (interactive "DPick the destination directory: ")
+  (let* ((id nil)
+         (cmd (format "mv-pwd-to %s" dest))
+         (output (shell-command-to-string cmd)))
+    (kill-buffer)
+    (org-roam-db-sync)
+    (message "Moved %s to %s")))
+
 (provide 'orp-ok-utils)
 ;;; orp-ok-utils.el ends here
