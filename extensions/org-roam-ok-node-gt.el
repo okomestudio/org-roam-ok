@@ -1,6 +1,6 @@
-;;; orp-ok-node-gt.el --- Plugin for org-roam-gt  -*- lexical-binding: t -*-
+;;; org-roam-ok-node-gt.el --- Plugin for org-roam-gt  -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2024 Taro Sato
+;; Copyright (C) 2024-2025 Taro Sato
 ;;
 ;;; License:
 ;;
@@ -26,56 +26,56 @@
 (require 'ok)
 (require 'org-roam)
 (require 'org-roam-gt)
-(require 'orp-ok-node)
+(require 'org-roam-ok-node)
 
-(defcustom oong-use-cache-in-memory t
+(defcustom orong-use-cache-in-memory t
   "Set non-nil to use in-memory cache, set nil to disable it."
   :group 'org-roam-plugin-ok)
 
-(defvar oong--cache-in-memory (make-hash-table :test 'equal)
+(defvar orong--cache-in-memory (make-hash-table :test 'equal)
   "In-memory cache.")
 
-(defun oong--cache-in-memory-get (node)
+(defun orong--cache-in-memory-get (node)
   "Get the cached item for NODE from the in-memory cache."
-  (when oong-use-cache-in-memory
+  (when orong-use-cache-in-memory
     (let* ((node-id (org-roam-node-id node))
            (node-title (org-roam-node-title node))
-           (entries (cadr (gethash node-id oong--cache-in-memory))))
+           (entries (cadr (gethash node-id orong--cache-in-memory))))
       (cdr (assoc node-title entries)))))
 
-(defun oong--cache-in-memory-save (node &rest rest)
+(defun orong--cache-in-memory-save (node &rest rest)
   "Save the NODE item in REST to the in-memory cache."
-  (when oong-use-cache-in-memory
+  (when orong-use-cache-in-memory
     (let* ((node-id (org-roam-node-id node))
            (node-title (org-roam-node-title node))
-           (entries (cadr (gethash node-id oong--cache-in-memory))))
+           (entries (cadr (gethash node-id orong--cache-in-memory))))
       (push `(,node-title . ,rest) entries)
-      (puthash node-id `(,(float-time) ,entries) oong--cache-in-memory)))
+      (puthash node-id `(,(float-time) ,entries) orong--cache-in-memory)))
   rest)
 
-(defun oong--cache-in-memory-remove (node)
+(defun orong--cache-in-memory-remove (node)
   "Remove NODE item from the in-memory cache."
-  (remhash (org-roam-node-id node) oong--cache-in-memory))
+  (remhash (org-roam-node-id node) orong--cache-in-memory))
 
-(defun oong--cache-in-memory-clear ()
+(defun orong--cache-in-memory-clear ()
   "Clear the in-memory cache."
   (interactive)
-  (clrhash oong--cache-in-memory))
+  (clrhash orong--cache-in-memory))
 
-(defun oong--cache-in-memory-maybe-remove ()
-  (when oong-use-cache-in-memory
+(defun orong--cache-in-memory-maybe-remove ()
+  (when orong-use-cache-in-memory
     (let ((file buffer-file-name))
       (when (string= (file-name-extension file) "org")
         (let* ((node (org-roam-node-at-point t)))
-          (oong--cache-in-memory-remove node))))))
+          (orong--cache-in-memory-remove node))))))
 
-(add-hook 'after-save-hook #'oong--cache-in-memory-maybe-remove)
+(add-hook 'after-save-hook #'orong--cache-in-memory-maybe-remove)
 
-(defun oong--recompute-display (total-width node)
+(defun orong--recompute-display (total-width node)
   "Recompute display of NODE with TOTAL-WIDTH."
   (let* ((title (concat (and (featurep 'org-roam-fz) (org-roam-node-fid node))
-                        (orp-ok-node--title node)))
-         (tags (or (orp-ok-node--tags node) nil))
+                        (org-roam-ok-node--title node)))
+         (tags (or (org-roam-ok-node--tags node) nil))
          (tags (string-join
                 (mapcar (lambda (s)
                           (let (r)
@@ -86,7 +86,7 @@
                             (setq r (propertize r 'face 'highlight))))
                         tags)
                 " "))
-         (timestamp (orp-ok-node--timestamp node))
+         (timestamp (org-roam-ok-node--timestamp node))
 
          (multibyte-scale 1.7)
          (tag-scale 1.0)
@@ -108,29 +108,29 @@
             " " tags
             " " timestamp)))
 
-(defun oong-display-template (node)
+(defun orong-display-template (node)
   "Callback for `org-roam-gt-node-display-template' for NODE."
   (let* ((frame-width (frame-width))
-         (cached (oong--cache-in-memory-get node))
+         (cached (orong--cache-in-memory-get node))
          (total-width (or (car cached) -1)))
     (cons (cadr
            (if (= frame-width total-width)
                cached
-             (oong--cache-in-memory-save
-              node frame-width (oong--recompute-display frame-width node))))
+             (orong--cache-in-memory-save
+              node frame-width (orong--recompute-display frame-width node))))
           node)))
 
 (setq org-roam-gt-node-display-template
-      #'oong-display-template
+      #'orong-display-template
       ;; Or use string template, e.g.,
-      ;; (concat "​​​​​${orp-title:*} "
-      ;;         (propertize "${orp-tags}" 'face 'org-tag)
-      ;;         " ${orp-timestamp:10}")
+      ;; (concat "​​​​​${ok-title:*} "
+      ;;         (propertize "${ok-tags}" 'face 'org-tag)
+      ;;         " ${ok-timestamp:10}")
       )
 
-(provide 'orp-ok-node-gt)
+(provide 'org-roam-ok-node-gt)
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("oong" . "orp-ok-node-gt"))
+;; read-symbol-shorthands: (("orong" . "org-roam-ok-node-gt"))
 ;; End:
-;;; orp-ok-node-gt.el ends here
+;;; org-roam-ok-node-gt.el ends here

@@ -1,6 +1,6 @@
-;;; orp-ok-utils.el --- Org Roam Plugin Okome Studio Utilities  -*- lexical-binding: t -*-
+;;; org-roam-ok-utils.el --- Org Roam Plugin Okome Studio Utilities  -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2024 Taro Sato
+;; Copyright (C) 2024-2025 Taro Sato
 ;;
 ;;; License:
 ;;
@@ -25,7 +25,7 @@
 
 (require 'dash)
 
-(defun orp-ok-ensure-all-headings-with-ids ()
+(defun org-roam-ok-ensure-all-headings-with-ids ()
   "Ensure all headings have IDs."
   (interactive)
   (save-excursion
@@ -33,7 +33,7 @@
     (while (outline-previous-heading)
       (org-id-get-create))))
 
-(defun orp-ok-extract-subtree-to-subdir ()
+(defun org-roam-ok-extract-subtree-to-subdir ()
   "Extract the subtree to a new Org file within the current directory."
   (interactive)
   (save-excursion
@@ -50,12 +50,12 @@
                                                              "${slug}.org"))))
   (call-interactively #'org-roam-extract-subtree))
 
-(defun orp-ok-filetags ()
+(defun org-roam-ok-filetags ()
   "Get filetags from the current node."
   (remove-if (lambda (x) (string= "" x))
              (string-split (cadar (org-collect-keywords '("filetags"))) ":")))
 
-(defun orp-ok-interpolate-leaf-nodes-for-export ()
+(defun org-roam-ok-interpolate-leaf-nodes-for-export ()
   "Extrapolate leaf heading nodes for export.
 When invoked within an Org buffer, the headings are traversed in
 its copy, each leaf heading expanded with the body of the target
@@ -88,7 +88,7 @@ node."
               (org-yank))))))
     (switch-to-buffer tmp-buffer)))
 
-(defun orp-ok-link-get (&optional arg)
+(defun org-roam-ok-link-get (&optional arg)
   "Extract URL from org-mode link and add it to kill ring.
 See emacs.stackexchange.com/a/60555/599."
   (interactive "P")
@@ -98,7 +98,7 @@ See emacs.stackexchange.com/a/60555/599."
          (url (concat type ":" url)))
     (kill-new url)))
 
-(defun orp-ok-string-to-org-slug (title)
+(defun org-roam-ok-string-to-org-slug (title)
   "Turn TITLE into its '-'-delimited slug.
 
 This function is used in place of `org-roam-node-slug'."
@@ -145,14 +145,14 @@ This function is used in place of `org-roam-node-slug'."
                                  pairs)))
         (downcase slug)))))
 
-(defun orp-ok-rename-visited-file-from-title ()
+(defun org-roam-ok-rename-visited-file-from-title ()
   "Rename the visited file using the slug from the document title."
   (interactive)
   (let* ((title (cadr (assoc "TITLE" (org-collect-keywords '("title")))))
-         (slug (orp-ok-string-to-org-slug title)))
+         (slug (org-roam-ok-string-to-org-slug title)))
     (rename-visited-file (format "%s.org" slug))))
 
-(defun orp-ok-mv-cwd-to (dest)
+(defun org-roam-ok-mv-cwd-to (dest)
   "Move the current directory under the directory DEST."
   (interactive "DPick the destination directory: ")
   (let* ((node (save-excursion (beginning-of-buffer) (org-roam-node-at-point)))
@@ -164,5 +164,5 @@ This function is used in place of `org-roam-node-slug'."
     (org-roam-node-visit (org-roam-node-from-id id))
     (message "Moved %s to %s")))
 
-(provide 'orp-ok-utils)
-;;; orp-ok-utils.el ends here
+(provide 'org-roam-ok-utils)
+;;; org-roam-ok-utils.el ends here

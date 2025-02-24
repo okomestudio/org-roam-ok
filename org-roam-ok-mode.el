@@ -1,6 +1,6 @@
-;;; orp-ok-mode.el --- Plugin for org-roam-mode  -*- lexical-binding: t -*-
+;;; org-roam-ok-mode.el --- Plugin for org-roam-mode  -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2024 Taro Sato
+;; Copyright (C) 2024-2025 Taro Sato
 ;;
 ;;; License:
 ;;
@@ -25,7 +25,7 @@
 
 (require 'org-roam)
 
-(defun orp-ok-create-missing-directories (file)
+(defun org-roam-ok-create-missing-directories (file)
   "Create parent directories of FILE if missing."
   (let* ((file (expand-file-name file))
          (parent-directory (file-name-directory file)))
@@ -34,24 +34,22 @@
          (not (file-directory-p parent-directory))
          (make-directory parent-directory 'parents))))
 
-(defun orp-ok-mode--create-missing-directories ()
+(defun org-roam-ok-mode--create-missing-directories ()
   "Automatically create missing directories when creating a file.
 
 This hook removes the prompt for the directory creation during,
 e.g., Org capture."
   (let ((file buffer-file-name))
-    (orp-ok-create-missing-directories file)))
+    (org-roam-ok-create-missing-directories file)))
 
 (add-hook 'find-file-not-found-functions
-          #'orp-ok-mode--create-missing-directories)
+          #'org-roam-ok-mode--create-missing-directories)
 
-(defun rename-file--ok-create-missing-directories
-    (_ newname &optional _)
+(defun org-roam-ok--create-missing-directories (_ newname &optional _)
   "Create missing directories when creating NEWNAME on `rename-file'."
-  (orp-ok-create-missing-directories newname))
+  (org-roam-ok-create-missing-directories newname))
 
-(advice-add 'rename-file
-            :before #'rename-file--ok-create-missing-directories)
+(advice-add 'rename-file :before #'org-roam-ok--create-missing-directories)
 
-(provide 'orp-ok-mode)
-;;; orp-ok-mode.el ends here
+(provide 'org-roam-ok-mode)
+;;; org-roam-ok-mode.el ends here

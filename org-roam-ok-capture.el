@@ -1,4 +1,4 @@
-;;; orp-ok-capture.el --- Plugin for org-roam-capture  -*- lexical-binding: t -*-
+;;; org-roam-ok-capture.el --- Plugin for org-roam-capture  -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2024-2025 Taro Sato
 ;;
@@ -26,7 +26,7 @@
 (require 's)
 (require 'org-roam-capture)
 
-(defun ooc-templates-merge (templates)
+(defun oro-capture-templates-merge (templates)
   "Merge TEMPLATES to `org-roam-capture-templates'.
 The TEMPLATES and `org-roam-capture-templates' are sorted by their
 keys (i.e., the CAR of each template in the list) separately, merged,
@@ -50,9 +50,9 @@ each template."
     (setq result (append result old-items new-items))
     (setopt org-roam-capture-templates result)))
 
-(provide 'orp-ok-capture)
+(provide 'org-roam-ok-capture)
 
 ;; Local Variables:
-;; read-symbol-shorthands: (("ooc" . "orp-ok-capture"))
+;; read-symbol-shorthands: (("oro" . "org-roam-ok"))
 ;; End:
-;;; orp-ok-capture.el ends here
+;;; org-roam-ok-capture.el ends here

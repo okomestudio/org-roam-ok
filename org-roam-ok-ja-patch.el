@@ -1,6 +1,6 @@
-;;; orp-ok-ja-patch.el --- Japanese patch  -*- lexical-binding: t -*-
+;;; org-roam-ok-ja-patch.el --- Japanese patch  -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2024 Taro Sato
+;; Copyright (C) 2024-2025 Taro Sato
 ;;
 ;;; License:
 ;;
@@ -27,7 +27,7 @@
 ;;
 ;;   - https://github.com/org-roam/org-roam/pull/2417/
 ;;
-;; Use the `orp-ok-ja-unlinked-references-section' function in place
+;; Use the `org-roam-ok-ja-unlinked-references-section' function in place
 ;; of `org-roam-unlinked-references-section'.
 ;;
 ;;; Code:
@@ -109,7 +109,7 @@ The output expression should be sanitized for the shell use."
   ;; a pull request. Here, a different function name is given in order
   ;; to allow use of both implementations side-by-side.
 
-  (defun orp-ok-ja-unlinked-references-section (node)
+  (defun org-roam-ok-ja-unlinked-references-section (node)
     "The unlinked references section for NODE.
 References from FILE are excluded."
     (when (and (executable-find "rg")
@@ -164,5 +164,5 @@ References from FILE are excluded."
                   (throw 'limit-result match_count))))
           (insert ?\n))))))
 
-(provide 'orp-ok-ja-patch)
-;;; orp-ok-ja-patch.el ends here
+(provide 'org-roam-ok-ja-patch)
+;;; org-roam-ok-ja-patch.el ends here

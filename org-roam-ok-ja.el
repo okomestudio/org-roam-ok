@@ -1,6 +1,6 @@
-;;; orp-ok-ja.el --- Japanese Plugin  -*- lexical-binding: t -*-
+;;; org-roam-ok-ja.el --- Japanese Plugin  -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2024 Taro Sato
+;; Copyright (C) 2024-2025 Taro Sato
 ;;
 ;;; License:
 ;;
@@ -23,7 +23,7 @@
 ;;
 ;;; Code:
 
-(require 'orp-ok-ja-patch) ;; uncomment this line when using without patch
+(require 'org-roam-ok-ja-patch) ;; uncomment this line when using without patch
 (require 'adaptive-wrap)
 (require 'ok-plural)
 
@@ -75,7 +75,7 @@
     (setopt org-roam-unlinked-references-word-boundary-re word-boundary-re-strict))
 
   ;; TITLE EXTRACTION REGEX
-  (defun orp-ok-ja--pluralize (title)
+  (defun org-roam-ok-ja--pluralize (title)
     "Pluralize noun(s) in TITLE."
     (let* ((tokens (string-split title " "))
            (pluralized-tokens (mapcar (lambda (token)
@@ -95,7 +95,7 @@
    (lambda (titles)
      (let* (;; Extend titles with their plurals
             (titles (flatten-list (mapcar (lambda (w)
-                                            (let ((p (orp-ok-ja--pluralize w)))
+                                            (let ((p (org-roam-ok-ja--pluralize w)))
                                               (if p `(,w ,p) `(,w))))
                                           titles)))
 
@@ -181,13 +181,13 @@
        (funcall orig-fun file row col file-prev row-prev col-prev))))
 
   ;; ORG ROAM BUFFER FORMATTING
-  (defun orp-ok-ja--org-roam-buffer-format ()
+  (defun org-roam-ok-ja--org-roam-buffer-format ()
     "Format org-roam buffer for ease of viewing multi-line items."
     (turn-on-visual-line-mode)
     (setq-local adaptive-wrap-extra-indent 4)
     (adaptive-wrap-prefix-mode +1))
 
-  (add-hook 'org-roam-mode-hook #'orp-ok-ja--org-roam-buffer-format))
+  (add-hook 'org-roam-mode-hook #'org-roam-ok-ja--org-roam-buffer-format))
 
-(provide 'orp-ok-ja)
-;;; orp-ok-ja.el ends here
+(provide 'org-roam-ok-ja)
+;;; org-roam-ok-ja.el ends here
