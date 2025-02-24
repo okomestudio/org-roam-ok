@@ -155,11 +155,13 @@ This function is used in place of `org-roam-node-slug'."
 (defun orp-ok-mv-cwd-to (dest)
   "Move the current directory under the directory DEST."
   (interactive "DPick the destination directory: ")
-  (let* ((id nil)
+  (let* ((node (save-excursion (beginning-of-buffer) (org-roam-node-at-point)))
+         (id (org-roam-node-id node))
          (cmd (format "mv-pwd-to %s" dest))
          (output (shell-command-to-string cmd)))
     (kill-buffer)
     (org-roam-db-sync)
+    (org-roam-node-visit (org-roam-node-from-id id))
     (message "Moved %s to %s")))
 
 (provide 'orp-ok-utils)
