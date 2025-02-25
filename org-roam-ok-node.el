@@ -320,6 +320,53 @@ purpose is to make a function like `org-roam-node-find' aware of
     "Return the slug of NODE."
     (oron--slug node)))
 
+;;; Aliases
+
+(defun oron-alias-add-or-remove (&optional arg)
+  "Add an Org Roam alias.
+When called with the `\\[universal-argument]' prefix ARG, the alias
+is removed instead of added."
+  (interactive "P")
+  (call-interactively
+   (pcase arg
+     ('(4) #'org-roam-alias-remove)
+     (_ #'org-roam-alias-add))))
+
+;;; Refs
+
+(defun org-roam-ok-node-ref-find (&optional _)
+  "Call the enhanced version of `org-roam-ref-find'.
+If the point is on a link and it is a cite link, then
+`org-roam-ref-find' is given the citekey as the initial string.
+Otherwise, it is the same as the vanilla version of
+`org-roam-ref-find'."
+  (interactive)
+  (let* ((link (org-element-lineage (org-element-context) '(link) t))
+         (type (org-element-property :type link))
+         (path (org-element-property :path link))
+         (ref (cond
+               ((string= type "cite")
+                (string-trim-left path "&"))
+               (t ""))))
+    (org-roam-ref-find ref)))
+
+;;; Tags
+
+(defun oron-tag-add-or-remove (&optional arg)
+  "Add an Org filetags or heading tag.
+When called with the `\\[universal-argument]' `\\[universal-argument]'
+`\\[universal-argument]' prefix ARG, the tag is removed instead of
+added."
+  (interactive "P")
+  (call-interactively
+   (if (not (org-before-first-heading-p))
+       ;; For non-filetags tags, use `org-set-tags-command' for both
+       ;; addition and removal:
+       #'org-set-tags-command
+     (pcase arg
+       ('(64) #'org-roam-tag-remove)
+       (_ #'org-roam-tag-add)))))
+
 ;;; Misc.
 
 (defun oron-fill-caches ()
