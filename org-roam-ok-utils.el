@@ -145,6 +145,8 @@ This function is used in place of `org-roam-node-slug'."
                                  pairs)))
         (downcase slug)))))
 
+(make-obsolete #'org-roam-ok-string-to-org-slug #'org-ok-text-to-slug "0.3")
+
 (defun org-roam-ok-rename-visited-file-from-title ()
   "Rename the visited file using the slug from the document title."
   (interactive)
