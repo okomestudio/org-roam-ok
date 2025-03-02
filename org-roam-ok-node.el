@@ -370,12 +370,19 @@ added."
 
 ;;; Misc.
 
+(defvar oron-fill-caches--lock nil
+  "Lock to ensure only one fill-caches session becomes active.")
+
 (defun oron-fill-caches ()
   "Fill all caches."
-  (message "Running org-roam-ok-node-fill-caches (org-roam-directory: %s)"
-           org-roam-directory)
-  (oron--cache-in-memory-fill)
-  (oron--cache-in-memory-file-fill))
+  (if oron-fill-caches--lock
+      (message "Skipping as an active fill-caches session exists.")
+    (setq oron-fill-caches--lock t)
+    (message "Filling caches from org-roam-directory (s)..."
+             org-roam-directory)
+    (oron--cache-in-memory-fill)
+    (oron--cache-in-memory-file-fill)
+    (setq oron-fill-caches--lock nil)))
 
 (provide 'org-roam-ok-node)
 
