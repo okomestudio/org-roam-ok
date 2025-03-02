@@ -51,6 +51,7 @@ purpose is to make a function like `org-roam-node-find' aware of
       (cond ((called-interactively-p 'any) (call-interactively orig-func))
             (t (apply orig-func rest)))
     (let* ((find-file-hook (remq 'recentf-track-opened-file find-file-hook))
+           (enable-local-variables :all)
            (buffer-existed (get-file-buffer oron-project-org-file))
            (buffer (find-file-noselect oron-project-org-file)))
       (with-current-buffer buffer
