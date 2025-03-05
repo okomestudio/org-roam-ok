@@ -35,6 +35,9 @@
       (setq time (time-add time (* -24 3600))))
     result))
 
+;; NOTE(2025-03-05): The "mtime" is recorded as a property in
+;; `org-roam-node', so SQL might get them faster than the following
+;; method. Explore this avenue.
 (defun org-roam-ok-timestamps--rg-args (days)
   "Get the ripgrep output for the files modified within the last DAYS."
   (let ((dates (format
@@ -54,7 +57,7 @@
            org-roam-directory)
      " ")))
 
-(defun org-roam-ok-timestamps--modified (days)
+(defun org-roam-ok-timestamps-nodes (days)
   "Get a list of nodes modified within the last DAYS."
   (let* ((cmd (org-roam-ok-timestamps--rg-args days))
          (output (shell-command-to-string cmd))
@@ -70,14 +73,20 @@
     (dolist (item items)
       (setq file (plist-get item :file)
             line (plist-get item :line))
-      (setq nodes (org-roam-db-query
-                   `[:select [nodes:id nodes:title nodes:properties]  :from nodes
-                             :where (and (= nodes:file ,file)
-                                         (<= nodes:pos ,line))
-                             :order-by [(desc nodes:pos)]
-                             :limit 1]))
-      (let* ((node (car nodes))
-             (id (nth 0 node))
+      (push (car (org-roam-db-query
+                  `[:select [nodes:id nodes:title nodes:properties] :from nodes
+                            :where (and (= nodes:file ,file)
+                                        (<= nodes:pos ,line))
+                            :order-by [(desc nodes:pos)]
+                            :limit 1]))
+            result))
+    result))
+
+(defun org-roam-ok-timestamps--modified (days)
+  "Get a list of nodes modified within the last DAYS."
+  (let (result)
+    (dolist (node (org-roam-ok-timestamps-nodes))
+      (let* ((id (nth 0 node))
              (title (nth 1 node))
              (props (nth 2 node))
              (mtime (org-roam-timestamps-encode

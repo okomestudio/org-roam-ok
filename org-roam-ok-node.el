@@ -368,6 +368,68 @@ added."
        ('(64) #'org-roam-tag-remove)
        (_ #'org-roam-tag-add)))))
 
+;;; Nodes selector
+
+(cl-defun oron-nodes-select (&key (days 7) (tags nil) (limit 5))
+  "Select nodes with TAGS within the last DAYS.
+When given, result will be truncated to LIMIT nodes."
+  (require 'org-roam-ok-timestamps)
+  (let* ((days-string (mapcar
+                       (lambda (time)
+                         (substring (org-roam-timestamps-decode time)
+                                    0 8))
+                       (org-roam-ok-timestamps--dates days)))
+
+         ;; Construct SQL statement.
+         (where-days (mapcar
+                      (lambda (s)
+                        `(like
+                          nodes:properties
+                          ',(format "%%(\"MTIME\"%%\"%s%%" s)))
+                      days-string))
+         (where-tags (mapcar
+                      (lambda (s)
+                        `(like
+                          nodes:properties
+                          ',(format '"%%(\"ALLTAGS\"%%\"%%:%s:%%\"%%" s)))
+                      tags))
+         (where (cond ((and where-days where-tags) `((and
+                                                      (or ,@where-days)
+                                                      (and ,@where-tags))))
+                      ((and where-days (null where-tags)) `((or ,@where-days)))
+                      ((and (null where-days) where-tags) `((and ,@where-tags)))))
+         (sql `[:select [nodes:id] :from nodes
+                        ,@(if where `(:where ,@where))
+                        :order-by [(desc nodes:title)]
+                        ,@(if limit `(:limit ,limit))]))
+    ;; (message "SQL: %s" (emacsql-prepare sql))
+    (mapcar (lambda (row)
+              (org-roam-populate (org-roam-node-create :id (car row))))
+            (org-roam-db-query sql))))
+
+(defun oron-nodes-insert-selected (_ days tags limit)
+  "Select LIMIT nodes within the last DAYS with TAGS.
+The user will be prompted for these values."
+  (interactive "P\nnLast days: \nsTags: \nnLimit: ")
+  (if nil ;; (not (boundp 'org-mode) org-mode)
+      (message "Not in Org document")
+    (let ((pre (cond
+                ((integerp arg) (cl-loop repeat arg concat "*"))
+                (t "-")))
+          (days (min (max days 0) 365))
+          (tags (--filter (not (string= it "")) (string-split tags " ")))
+          (limit (if (< limit 0) nil limit)))
+      (dolist (node (oron-nodes-select :days days :tags tags :limit limit))
+        (let ((id (org-roam-node-id node))
+              (title (org-roam-node-title node))
+              (mtime (first
+                      (string-split
+                       (alist-get "MTIME"
+                                  (org-roam-node-properties node)
+                                  nil nil 'equal)
+                       " "))))
+          (insert (format "%s [[id:%s][%s %s]]\n" pre id mtime title)))))))
+
 ;;; Misc.
 
 (defvar oron-fill-caches--lock nil
