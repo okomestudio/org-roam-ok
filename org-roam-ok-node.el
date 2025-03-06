@@ -401,18 +401,23 @@ When given, result will be truncated to LIMIT nodes."
          (sql `[:select [nodes:id] :from nodes
                         ,@(if where `(:where ,@where))
                         :order-by [(desc nodes:title)]
-                        ,@(if limit `(:limit ,limit))]))
+                        ,@(if limit `(:limit ,limit))])
+         (rows (mapcar
+                (lambda (row)
+                  (let* ((node (org-roam-populate (org-roam-node-create :id (car row))))
+                         (mtime (oron-mtime node)))
+                    `(,mtime . ,node)))
+                (org-roam-db-query sql))))
     ;; (message "SQL: %s" (emacsql-prepare sql))
-    (mapcar (lambda (row)
-              (org-roam-populate (org-roam-node-create :id (car row))))
-            (org-roam-db-query sql))))
+    (mapcar (lambda (e) (cdr e))
+            (sort rows :key (lambda (row) (car row)) :reverse t))))
 
 (defun oron-nodes-insert-selected (arg days tags limit)
   "Select LIMIT nodes within the last DAYS with TAGS.
 The user will be prompted for these values. ARG is used for interactive
 invocation."
   (interactive "P\nnLast days: \nsTags: \nnLimit: ")
-  (if nil ;; (not (boundp 'org-mode) org-mode)
+  (if (not (derived-mode-p '(org-mode)))
       (message "Not in Org document")
     (let ((pre (cond
                 ((integerp arg) (cl-loop repeat arg concat "*"))
@@ -423,13 +428,16 @@ invocation."
       (dolist (node (oron-nodes-select :days days :tags tags :limit limit))
         (let ((id (org-roam-node-id node))
               (title (org-roam-node-title node))
-              (mtime (first
-                      (string-split
-                       (alist-get "MTIME"
-                                  (org-roam-node-properties node)
-                                  nil nil 'equal)
-                       " "))))
-          (insert (format "%s [[id:%s][%s %s]]\n" pre id mtime title)))))))
+              (mtime (substring (oron-mtime node) 0 8)))
+          (insert (format "%s [[id:%s][[%s] %s]]\n" pre id mtime title)))))))
+
+(defun oron-mtime (node)
+  "Access mtime of NODE."
+  (first
+   (string-split
+    (alist-get "MTIME" (org-roam-node-properties node)
+               nil nil 'equal)
+    " ")))
 
 ;;; Misc.
 
