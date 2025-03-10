@@ -76,7 +76,7 @@ The TEMPLATE file is looked for in `oroc-template-directory'."
      :unnarrowed t))
   "The `org-roam' capture templates for use with Bibtex.")
 
-(defcustom oroc-type-to-capture-keys '(("book" . "b"))
+(defcustom oroc-type-to-capture-keys '((book . "b"))
   "The mapping from Bibtex record type to capture keys.")
 
 (defcustom oroc-parent-from-citekey
@@ -136,11 +136,10 @@ This function prompts user for a Bibtex item."
   "Capture from a Bibtex item."
   (interactive)
   (let* ((result (oroc--prepare-capture))
-         (type (plist-get result :type))
+         (type (intern (plist-get result :type)))
          (org-roam-capture--node (plist-get result :node))
          (org-roam-capture--info (plist-get result :info))
-         (capture-keys (alist-get type oroc-type-to-capture-keys
-                                  nil nil 'equal)))
+         (capture-keys (alist-get type oroc-type-to-capture-keys)))
     (org-roam-capture- :keys capture-keys
                        :node org-roam-capture--node
                        :info org-roam-capture--info
