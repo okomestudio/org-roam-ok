@@ -105,6 +105,8 @@ This function prompts user for a Bibtex item."
     (setq
      info
      (pcase type
+       ("article"
+        `(:article-author ,(alist-get "author" record nil nil 'equal)))
        ("book"
         `(:book-author ,(alist-get "author" record nil nil 'equal)))
        ("podcast"
