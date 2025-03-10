@@ -24,9 +24,10 @@
 ;;; Code:
 
 (require 'dash)
-(require 's)
+(require 'ok)
 (require 'org-ref)
 (require 'org-roam-capture)
+(require 's)
 
 (defcustom oroc-template-directory nil
   "Template body directory.
@@ -83,6 +84,20 @@ The TEMPLATE file is looked for in `oroc-template-directory'."
   '(("SomeKeyPrefix" . "[[id:1234][Parent]]"))
   "Alist mapping refkey prefix to its parent node.")
 
+(defun oroc--format-author (authors)
+  "Format BibTeX AUTHORS list for `org-roam'.
+See `bibtex-completion-shorten-authors' for reference."
+  (cl-loop for a in (s-split " and " authors)
+           for p = (--map (s-trim it) (s-split "," a t))
+           for sep = "" then ", "
+           concat sep
+           if (eq 1 (length p))
+           concat (car p)
+           else
+           concat (if (ok-string-contains-ja-p (car p))
+                      (concat (car p) (cadr p))
+                    (concat (cadr p) " " (car p)))))
+
 (defun oroc--prepare-capture ()
   "Prepare data for capture using a Bibtex item.
 This function prompts user for a Bibtex item."
@@ -106,9 +121,11 @@ This function prompts user for a Bibtex item."
      info
      (pcase type
        ("article"
-        `(:article-author ,(alist-get "author" record nil nil 'equal)))
+        `(:article-author ,(oroc--format-author
+                            (alist-get "author" record nil nil 'equal))))
        ("book"
-        `(:book-author ,(alist-get "author" record nil nil 'equal)))
+        `(:book-author ,(oroc--format-author
+                         (alist-get "author" record nil nil 'equal))))
        ("podcast"
         (let ((parent
                (let* ((pattern
@@ -119,7 +136,8 @@ This function prompts user for a Bibtex item."
                       (matched (progn (string-match pattern key)
                                       (match-string 1 key))))
                  (alist-get matched oroc-parent-from-citekey nil nil 'equal))))
-          `(:podcast-guest ,(alist-get "guest" record nil nil 'equal)
+          `(:podcast-guest ,(oroc--format-author
+                             (alist-get "guest" record nil nil 'equal))
                            :parent ,parent)))))
     `(:type ,type
             :node ,(org-roam-node-create :title title)
