@@ -111,7 +111,6 @@ This function prompts user for a Bibtex item."
                   (format "rg \":ROAM_REFS:\s+.*cite:&%s\" -l %s"
                           key org-roam-directory)))
          info)
-    (pp record)
     (when (> (length (string-trim output)) 0)
       (error "Literature note already exists for %s" key))
 
@@ -126,6 +125,9 @@ This function prompts user for a Bibtex item."
        ("book"
         `(:book-author ,(oroc--format-author
                          (alist-get "author" record nil nil 'equal))))
+       ("online"
+        `(:article-author ,(oroc--format-author
+                            (alist-get "author" record nil nil 'equal))))
        ("podcast"
         (let ((parent
                (let* ((pattern
