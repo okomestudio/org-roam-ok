@@ -121,13 +121,13 @@ This function prompts user for a Bibtex item."
      (pcase type
        ("article"
         `(:article-author ,(oroc--format-author
-                            (alist-get "author" record nil nil 'equal))))
+                            (alist-get "author" record  nil 'equal))))
        ("book"
         `(:book-author ,(oroc--format-author
-                         (alist-get "author" record nil nil 'equal))))
+                         (alist-get "author" record "" nil 'equal))))
        ("online"
         `(:article-author ,(oroc--format-author
-                            (alist-get "author" record nil nil 'equal))))
+                            (alist-get "author" record "" nil 'equal))))
        ("podcast"
         (let ((parent
                (let* ((pattern
@@ -139,7 +139,7 @@ This function prompts user for a Bibtex item."
                                       (match-string 1 key))))
                  (alist-get matched oroc-parent-from-citekey nil nil 'equal))))
           `(:podcast-guest ,(oroc--format-author
-                             (alist-get "guest" record nil nil 'equal))
+                             (alist-get "guest" record "" nil 'equal))
                            :parent ,parent)))))
     `(:type ,type
             :node ,(org-roam-node-create :title title)
