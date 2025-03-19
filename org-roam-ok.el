@@ -65,7 +65,8 @@
       (setq org-roam-ok-node-fill-caches--lock t)
       (async-start
        `(lambda ()
-          (let ((load-path '(,@load-path)))
+          (let ((load-path '(,@load-path))
+                (started-time (current-time)))
             (require 'org-roam)
             (require 'org-roam-ok)
             (org-roam-ok-enhance)
@@ -74,20 +75,21 @@
               (org-roam-ok-node-project-org-file--load #'org-roam-ok-node-fill-caches))
 
             `(,org-roam-ok-node--cache-in-memory
-              ,org-roam-ok-node--cache-in-memory-file)))
+              ,org-roam-ok-node--cache-in-memory-file
+              ,started-time)))
 
        (lambda (result)
-         (let* ((cache-in-memory (car result))
-                (cache-in-memory-file (cadr result)))
-           (message "Filled in-memory cache with %d nodes in %d files"
-                    (hash-table-size cache-in-memory)
-                    (hash-table-size cache-in-memory-file))
+         (pcase-let
+             ((`(,cache-in-memory ,cache-in-memory-file ,started-time) result))
+           (message
+            (concat "org-roam-ok: "
+                    "Filled in-memory cache (%d nodes; %d files; took %f sec)")
+            (hash-table-size cache-in-memory)
+            (hash-table-size cache-in-memory-file)
+            (float-time (time-subtract (current-time) started-time)))
            (setq org-roam-ok-node--cache-in-memory cache-in-memory
                  org-roam-ok-node--cache-in-memory-file cache-in-memory-file
                  org-roam-ok-node-fill-caches--lock nil)))))))
-
-(advice-add #'org-roam-ok--init-cache :around #'ok-debug-ad-function-beg-end)
-(advice-add #'org-roam-ok--init-on-idle :around #'ok-debug-ad-function-beg-end)
 
 (defun org-roam-ok--on-idle-init-scheduler ()
   "Schedule on-idle initializer."
