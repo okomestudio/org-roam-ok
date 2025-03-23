@@ -135,9 +135,10 @@ This function prompts user for a Bibtex item."
                                (s-join "\\|"
                                        (--map (car it)
                                               oroc-parent-from-citekey))))
-                      (matched (progn (string-match pattern key)
-                                      (match-string 1 key))))
-                 (alist-get matched oroc-parent-from-citekey nil nil 'equal))))
+                      (matched (if (string-match pattern key)
+                                   (match-string 1 key)
+                                 "")))
+                 (alist-get matched oroc-parent-from-citekey "" nil 'equal))))
           `(:podcast-guest ,(oroc--format-author
                              (alist-get "guest" record "" nil 'equal))
                            :parent ,parent)))))
