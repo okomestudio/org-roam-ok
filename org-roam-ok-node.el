@@ -23,6 +23,8 @@
 ;;
 ;;; Code:
 
+(require 'async)
+(require 'org-roam)
 (require 'org-roam-ok-utils)
 (require 'marginalia)
 (require 'org-roam-node)
@@ -454,6 +456,48 @@ invocation."
     (oron--cache-in-memory-fill)
     (oron--cache-in-memory-file-fill)
     (setq oron-fill-caches--lock nil)))
+
+;;;###autoload
+(defun oron-fill-caches-async ()
+  "Run `org-roam-ok-node-fill-caches' in an async process."
+  (interactive)
+  (unless (and (boundp 'org-roam-ok-node-fill-caches--lock)
+               org-roam-ok-node-fill-caches--lock)
+    (let ((async-debug t)
+          (lsp-log-io nil)
+          (lsp-print-performance nil)
+          (inhibit-message t))
+      (setq org-roam-ok-node-fill-caches--lock t)
+      (async-start
+       `(lambda ()
+          (let ((load-path '(,@load-path))
+                (started-time (current-time)))
+            (require 'org-ok)
+            (require 'org-roam)
+            (require 'org-roam-ok)
+            (org-roam-ok-enhance)
+
+            (let ((org-roam-ok-node-project-org-file ,org-roam-ok-node-project-org-file))
+              (org-roam-ok-node-project-org-file--load #'org-roam-ok-node-fill-caches))
+
+            (prin1 (list org-roam-ok-node--cache-in-memory
+                         org-roam-ok-node--cache-in-memory-file
+                         started-time))))
+
+       (lambda (result)
+         (message "Started the async handler")
+         (pcase-let
+             ((`(,cache-in-memory ,cache-in-memory-file ,started-time) result))
+           (message
+            (concat "org-roam-ok: "
+                    "Filled in-memory cache (%d nodes; %d files; took %f sec)")
+            (hash-table-size cache-in-memory)
+            (hash-table-size cache-in-memory-file)
+            (float-time (time-subtract (current-time) started-time)))
+           (setq org-roam-ok-node--cache-in-memory cache-in-memory
+                 org-roam-ok-node--cache-in-memory-file cache-in-memory-file
+                 org-roam-ok-node-fill-caches--lock nil))
+         (message "Ended the async handler"))))))
 
 (provide 'org-roam-ok-node)
 

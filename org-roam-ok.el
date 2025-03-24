@@ -4,7 +4,7 @@
 ;;
 ;; Author: Taro Sato <okomestudio@gmail.com>
 ;; URL: https://github.com/okomestudio/org-roam-ok
-;; Version: 0.4.1
+;; Version: 0.4.2
 ;; Keywords: org-mode, roam, plug-in
 ;; Package-Requires: ((emacs "30.1") (org "9.7") (org-roam "20250111.252") (adaptive-wrap "0.8") (async "1.9.7") (dash "2.19.1") (marginalia "1.6") (ok "0.2.3") (ok-plural "0.1") (org-ref "20250301.1918") (org-roam-timestamps "1.0.0") (s "1.13.1"))
 ;;
@@ -30,7 +30,6 @@
 ;;
 ;;; Code:
 
-(require 'async)
 (require 'ok)
 
 (defgroup org-roam-ok nil
@@ -38,11 +37,12 @@
   :group 'org-roam-ok
   :prefix "org-roam-ok-")
 
-(defvar org-roam-ok-version "0.4"
+(defvar org-roam-ok-version "0.4.2"
   "Package version.")
 
 (defcustom org-roam-ok-on-idle-delay 60
-  "Idle delay before running on-idle initializer."
+  "Idle delay in seconds before running on-idle initializer.
+When set to nil, the on-idle initializer will not run."
   :group 'org-roam-ok)
 
 ;; On-idle initialization
@@ -59,46 +59,17 @@
 
   (when (not (and (boundp 'org-roam-ok-node--cache-in-memory)
                   (> (hash-table-count org-roam-ok-node--cache-in-memory) 0)))
-
-    (when (or (not (boundp 'org-roam-ok-node-fill-caches--lock))
-              (not org-roam-ok-node-fill-caches--lock))
-      (setq org-roam-ok-node-fill-caches--lock t)
-      (async-start
-       `(lambda ()
-          (let ((load-path '(,@load-path))
-                (started-time (current-time)))
-            (require 'org-roam)
-            (require 'org-roam-ok)
-            (org-roam-ok-enhance)
-
-            (let ((org-roam-ok-node-project-org-file ,org-roam-ok-node-project-org-file))
-              (org-roam-ok-node-project-org-file--load #'org-roam-ok-node-fill-caches))
-
-            `(,org-roam-ok-node--cache-in-memory
-              ,org-roam-ok-node--cache-in-memory-file
-              ,started-time)))
-
-       (lambda (result)
-         (pcase-let
-             ((`(,cache-in-memory ,cache-in-memory-file ,started-time) result))
-           (message
-            (concat "org-roam-ok: "
-                    "Filled in-memory cache (%d nodes; %d files; took %f sec)")
-            (hash-table-size cache-in-memory)
-            (hash-table-size cache-in-memory-file)
-            (float-time (time-subtract (current-time) started-time)))
-           (setq org-roam-ok-node--cache-in-memory cache-in-memory
-                 org-roam-ok-node--cache-in-memory-file cache-in-memory-file
-                 org-roam-ok-node-fill-caches--lock nil)))))))
+    (org-roam-ok-node-fill-caches-async)))
 
 (defun org-roam-ok--on-idle-init-scheduler ()
   "Schedule on-idle initializer."
   (when org-roam-ok--on-idle-timer
     (cancel-timer org-roam-ok--on-idle-timer))
-  (setq org-roam-ok--on-idle-timer
-        (run-with-idle-timer org-roam-ok-on-idle-delay
-                             nil
-                             #'org-roam-ok--init-on-idle)))
+  (unless (null org-roam-ok-on-idle-delay)
+    (setq org-roam-ok--on-idle-timer
+          (run-with-idle-timer org-roam-ok-on-idle-delay
+                               nil
+                               #'org-roam-ok--init-on-idle))))
 
 ;;;###autoload
 (defun org-roam-ok-on-idle-init-setup ()
