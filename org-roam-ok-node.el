@@ -485,7 +485,6 @@ invocation."
                          started-time))))
 
        (lambda (result)
-         (message "Started the async handler")
          (pcase-let
              ((`(,cache-in-memory ,cache-in-memory-file ,started-time) result))
            (message
@@ -496,8 +495,9 @@ invocation."
             (float-time (time-subtract (current-time) started-time)))
            (setq org-roam-ok-node--cache-in-memory cache-in-memory
                  org-roam-ok-node--cache-in-memory-file cache-in-memory-file
-                 org-roam-ok-node-fill-caches--lock nil))
-         (message "Ended the async handler"))))))
+                 org-roam-ok-node-fill-caches--lock nil)))))
+    ;; (switch-to-buffer "*emacs*")
+    ))
 
 (provide 'org-roam-ok-node)
 
