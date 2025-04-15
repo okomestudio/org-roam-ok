@@ -138,13 +138,13 @@ This function prompts user for a Bibtex item."
                       (matched (if (string-match pattern key)
                                    (match-string 1 key)
                                  "")))
-                 (alist-get matched oroc-parent-from-citekey "" nil 'equal))))
-          `(:podcast-guest ,(oroc--format-author
-                             (alist-get "guest" record "" nil 'equal))
-                           :parent ,parent)))))
-    `(:type ,type
-            :node ,(org-roam-node-create :title title)
-            :info (:citekey ,citekey ,@info))))
+                 (alist-get matched oroc-parent-from-citekey key nil 'equal))))
+          `( :podcast-guest ,(oroc--format-author
+                              (alist-get "guest" record "" nil 'equal))
+             :parent ,parent )))))
+    `( :type ,type
+       :node ,(org-roam-node-create :title title)
+       :info (:citekey ,citekey ,@info) )))
 
 (defun oroc-prompt-for-citekey-if-missing ()
   "If citekey is not set, this function will prompt user for a Bibtex item."
