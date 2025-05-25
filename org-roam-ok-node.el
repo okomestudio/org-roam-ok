@@ -24,6 +24,7 @@
 ;;; Code:
 
 (require 'async)
+(require 'dash)
 (require 'org-roam)
 (require 'org-roam-ok-utils)
 (require 'marginalia)
@@ -372,7 +373,7 @@ added."
 
 ;;; Nodes selector
 
-(cl-defun oron-nodes-select (&key (days 7) (tags nil) (limit 5))
+(cl-defun oron-nodes-select (&key (days 7) (tags nil) (limit nil) (filter nil))
   "Select nodes with TAGS within the last DAYS.
 When given, result will be truncated to LIMIT nodes."
   (require 'org-roam-ok-timestamps)
@@ -407,31 +408,14 @@ When given, result will be truncated to LIMIT nodes."
          (rows (mapcar
                 (lambda (row)
                   (let* ((node (org-roam-populate (org-roam-node-create :id (car row))))
-                         (mtime (oron-mtime node)))
-                    `(,mtime . ,node)))
+                         (node (if (functionp filter) (apply filter `(,node)) node)))
+                    (when node
+                      `(,(oron-mtime node) . ,node))))
                 (org-roam-db-query sql))))
-    ;; (message "SQL: %s" (emacsql-prepare sql))
     (mapcar (lambda (e) (cdr e))
-            (sort rows :key (lambda (row) (car row)) :reverse t))))
-
-(defun oron-nodes-insert-selected (arg days tags limit)
-  "Select LIMIT nodes within the last DAYS with TAGS.
-The user will be prompted for these values. ARG is used for interactive
-invocation."
-  (interactive "P\nnLast days: \nsTags: \nnLimit: ")
-  (if (not (derived-mode-p '(org-mode)))
-      (message "Not in Org document")
-    (let ((pre (cond
-                ((integerp arg) (cl-loop repeat arg concat "*"))
-                (t "-")))
-          (days (min (max days 0) 365))
-          (tags (--filter (not (string= it "")) (string-split tags " ")))
-          (limit (if (< limit 0) nil limit)))
-      (dolist (node (oron-nodes-select :days days :tags tags :limit limit))
-        (let ((id (org-roam-node-id node))
-              (title (org-roam-node-title node))
-              (mtime (substring (oron-mtime node) 0 8)))
-          (insert (format "%s [[id:%s][[%s] %s]]\n" pre id mtime title)))))))
+            (sort (--filter it rows)
+                  :key (lambda (row) (car row))
+                  :reverse t))))
 
 (defun oron-mtime (node)
   "Access mtime of NODE."
@@ -441,7 +425,7 @@ invocation."
                nil nil 'equal)
     " ")))
 
-;;; Misc.
+;;; Node cashing
 
 (defvar oron-fill-caches--lock nil
   "Lock to ensure only one fill-caches session becomes active.")
