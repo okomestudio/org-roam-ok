@@ -371,6 +371,10 @@ added."
        ('(64) #'org-roam-tag-remove)
        (_ #'org-roam-tag-add)))))
 
+(cl-defun oron-nodes-with-backlinks (node)
+  "Get the nodes with backlinks to NODE."
+  (--map (org-roam-backlink-source-node it) (org-roam-backlinks-get node)))
+
 ;;; Nodes selector
 
 (cl-defun oron-nodes-select (&key (days 7) (tags nil) (limit nil) (filter nil))
@@ -440,6 +444,19 @@ When given, result will be truncated to LIMIT nodes."
     (oron--cache-in-memory-fill)
     (oron--cache-in-memory-file-fill)
     (setq oron-fill-caches--lock nil)))
+
+;;; Editing utilities
+
+(cl-defun oron-insert-backlinks ()
+  "Insert a backlinks section for node at point."
+  (interactive)
+  (let ((nodes (oron-nodes-with-backlinks (org-roam-node-at-point))))
+    (save-excursion
+      (insert "* Backlinks\n")
+      (dolist (node nodes)
+        (let ((id (org-roam-node-id node))
+              (desc (org-roam-node-title node)))
+          (insert (format "** [[id:%s][%s]]\n" id desc)))))))
 
 ;;;###autoload
 (defun oron-fill-caches-async ()
