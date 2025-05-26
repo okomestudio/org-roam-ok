@@ -532,8 +532,8 @@ When given, result will be truncated to LIMIT nodes."
 
 (defun oron-display--cache-maybe-remove ()
   "Remove cache entry on file update."
-  (if-let (oron-display--cache
-           (derived-mode-p '(org-mode))
+  (if-let ((_ oron-display--cache)
+           (_ (derived-mode-p '(org-mode)))
            (node (org-roam-node-at-point t)))
       (oron-display--cache-remove node)))
 
