@@ -96,7 +96,7 @@ When set to nil, the on-idle initializer will not run."
   (require 'org-roam-ok-node)
   (require 'org-roam-ok-ja)
 
-  (add-hook 'after-save-hook #'oron-display--cache-maybe-remove)
+  (add-hook 'after-save-hook #'org-roam-ok-node-display--cache-maybe-remove)
   (advice-add #'org-roam-ok-node-display-template :around
               #'org-roam-ok-node-display-cache-rendered)
   (setopt org-roam-node-display-template #'org-roam-ok-node-display-template)
@@ -110,7 +110,7 @@ When set to nil, the on-idle initializer will not run."
 
 (defun org-roam-ok-deactivate ()
   "Deactivate `org-roam-ok-mode'."
-  (remove-hook 'after-save-hook #'oron-display--cache-maybe-remove))
+  (remove-hook 'after-save-hook #'org-roam-ok-node-display--cache-maybe-remove))
 
 ;;;###autoload
 (define-minor-mode org-roam-ok-mode
