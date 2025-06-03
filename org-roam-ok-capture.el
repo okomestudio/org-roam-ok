@@ -39,6 +39,9 @@ The TEMPLATES and `org-roam-capture-templates' are sorted by their
 keys (i.e., the CAR of each template in the list) separately, merged,
 and then saved to `org-roam-capture-templates'.
 
+TEMPLATES can include a list item like (KEY nil), which will remove the
+template for KEY.
+
 See the documentation for `org-roam-capture-templates' for how to write
 each template."
   (let ((old-items (sort org-roam-capture-templates
@@ -55,7 +58,7 @@ each template."
               (pop old-items))
           (setq result (append result (list (pop new-items)))))))
     (setq result (append result old-items new-items))
-    (setopt org-roam-capture-templates result)))
+    (setopt org-roam-capture-templates (--filter (cadr it) result))))
 
 (defun oroc-template-as-string (template)
   "Read content of TEMPLATE as string.
