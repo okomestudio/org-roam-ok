@@ -70,16 +70,6 @@ The TEMPLATE file is looked for in `oroc-template-directory'."
 
 ;;; Capture templates with Bibtex
 
-(defcustom oroc-templates-bibtex
-  '(("b" "Example" plain
-     (function (lambda ()
-                 (org-roam-ok-capture-prompt-for-citekey-if-missing)
-                 "#+title: ${title}\n"))
-     :target (file+head "literature/${id}/${slug}.org"
-                        ":PROPERTIES:\\n:ROAM_REFS:%^{ref}\n:END:\n")
-     :unnarrowed t))
-  "The `org-roam' capture templates for use with Bibtex.")
-
 (defcustom oroc-type-to-capture-keys '((book . "b"))
   "The mapping from Bibtex record type to capture keys.")
 
@@ -169,8 +159,7 @@ This function prompts user for a Bibtex item."
     (org-roam-capture- :keys capture-keys
                        :node org-roam-capture--node
                        :info org-roam-capture--info
-                       :props '(:immediate-finish nil)
-                       :templates oroc-templates-bibtex)))
+                       :props '(:immediate-finish nil))))
 
 (provide 'org-roam-ok-capture)
 
