@@ -8,7 +8,6 @@ The enhancements include:
 - Informative minibuffer lines
   - Title-alias distinction
   - Parent-child connection between org-roam file nodes
-- Japanese-aware unlinked references parsing
 - Use of hyphen for title slug
 - Automatic creation of missing parent directories
 - In-memory caching for faster node lookup
@@ -25,9 +24,6 @@ To install via `use-package`, have the following lines in your `init.el`:
 (use-package org-roam-timestamps
   :after org-roam)
 
-(use-package ok-plural
-  :straight (ok-plural :host github :repo "okomestudio/ok-plural.el"))
-
 (use-package org-roam-ok
   :straight (:host github :repo "okomestudio/org-roam-ok")
   :init (org-roam-ok-on-idle-init-setup))
@@ -43,19 +39,6 @@ use the `org-roam-ok-mode` function explicitly to enable the minor mode, e.g.,
   :config
   ...
   (org-roam-ok-mode 1))
-```
-
-## Usage
-
-To use the enhanced unlinked references section in the org-roam buffer, add
-`org-roam-ok-ja-unlinked-refrences-section` to the `org-roam-mode-sections` variable,
-e.g.:
-
-``` emacs-lisp
-(setopt org-roam-mode-sections
-        (list #'org-roam-backlinks-section
-              #'org-roam-reflinks-section
-              #'org-roam-ok-ja-unlinked-references-section))
 ```
 
 ## Customization
