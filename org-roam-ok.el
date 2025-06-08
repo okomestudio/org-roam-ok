@@ -4,7 +4,7 @@
 ;;
 ;; Author: Taro Sato <okomestudio@gmail.com>
 ;; URL: https://github.com/okomestudio/org-roam-ok
-;; Version: 0.6.1
+;; Version: 0.7.1
 ;; Keywords: org-mode, roam, plug-in
 ;; Package-Requires: ((emacs "30.1") (org "9.7") (org-roam "20250527.1558") (async "1.9.7") (dash "2.19.1") (marginalia "1.6") (ok "0.2.3") (org-ref "20250301.1918") (org-roam-timestamps "1.0.0") (s "1.13.1"))
 ;;
@@ -95,9 +95,46 @@ When set to nil, the on-idle initializer will not run."
   (require 'org-roam-ok-mode)
   (require 'org-roam-ok-node)
 
-  (add-hook 'after-save-hook #'org-roam-ok-node-display--cache-maybe-remove)
-  (advice-add #'org-roam-ok-node-display-template :around
-              #'org-roam-ok-node-display-cache-rendered)
+  (defun org-roam-ok-node-display-template (node &optional total-width)
+    "Render NODE using display template and cache.
+When not given, TOTAL-WIDTH defaults to the current `frame-width'. Use
+this as the default display template function."
+    (let* ((total-width (or total-width (frame-width)))
+
+           (title (concat (and (featurep 'org-roam-fz)
+                               org-roam-fz-mode
+                               (org-roam-node-fid node))
+                          (org-roam-ok-node--title node)))
+           (tags (string-join
+                  (mapcar (lambda (s)
+                            (let (r)
+                              (setq r (concat ":" s ":"))
+                              (put-text-property 0 1 'invisible t r)
+                              (put-text-property (- (length r) 1) (length r)
+                                                 'invisible t r)
+                              (setq r (propertize r 'face 'highlight))))
+                          (or (org-roam-ok-node--tags node) nil))
+                  " "))
+           (timestamp (org-roam-ok-node--timestamp node))
+
+           (multibyte-scale 1.7)
+           (tag-scale 1.0)
+
+           (timestamp-width (1+ (length timestamp)))
+           (title-and-tags-width (- total-width timestamp-width))
+           (tags-width (1+ (round (* (length tags) tag-scale))))
+           (max-title-width (- title-and-tags-width tags-width))
+           (title-width (ok-string-multibyte-string-width title multibyte-scale)))
+      (if (>= title-width max-title-width)
+          (let ((thresh (length (ok-string-multibyte-substring
+                                 title 0 max-title-width multibyte-scale))))
+            (put-text-property 0 (1- thresh) 'invisible nil title)
+            (put-text-property thresh (length title) 'invisible t title))
+        (put-text-property 0 (length title) 'invisible nil title)
+        (setq title (concat title
+                            (make-string (- max-title-width title-width) ?\ ))))
+      (concat title " " tags " " timestamp)))
+
   (setopt org-roam-node-display-template #'org-roam-ok-node-display-template)
 
   ;; Wrap these functions so that each will load the project
