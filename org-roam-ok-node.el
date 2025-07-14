@@ -138,6 +138,11 @@ purpose is to make a function like `org-roam-node-find' aware of
 (defvar oron--cache-in-memory-file (make-hash-table :test 'equal)
   "In-memory cache, mapping a file to the ID of its top-level node.")
 
+(defun oron--cache-in-memory-clear ()
+  (interactive)
+  (setq oron--cache-in-memory (make-hash-table :test 'equal)
+        oron--cache-in-memory-file (make-hash-table :test 'equal)))
+
 (defun oron--cache-in-memory-file-get (file)
   (when oron-use-cache-in-memory
     (gethash file oron--cache-in-memory-file)))
