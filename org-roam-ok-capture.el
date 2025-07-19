@@ -33,6 +33,7 @@
   "Template body directory.
 Each file in this directory should contain template body.")
 
+;;;###autoload
 (defun oroc-templates-merge (templates)
   "Merge TEMPLATES to `org-roam-capture-templates'.
 The TEMPLATES and `org-roam-capture-templates' are sorted by their
