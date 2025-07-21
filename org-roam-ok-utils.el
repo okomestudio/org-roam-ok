@@ -147,15 +147,19 @@ This function is used in place of `org-roam-node-slug'."
 
 (make-obsolete #'org-roam-ok-string-to-org-slug #'org-ok-text-to-slug "0.3")
 
+;;;###autoload
 (defun org-roam-ok-rename-visited-file-from-title ()
   "Rename the visited file using the slug from the document title."
   (interactive)
-  (let* ((title (cadr (assoc "TITLE" (org-collect-keywords '("title")))))
-         (slug (org-roam-ok-string-to-org-slug title)))
-    (rename-visited-file (format "%s.org" slug))))
+  (if-let* ((title (cadr (assoc "TITLE" (org-collect-keywords '("title")))))
+            (slug (org-roam-ok-string-to-org-slug title)))
+      (rename-visited-file (format "%s.org" slug))
+    (warn "Cannot parse document title")))
 
+;;;###autoload
 (defun org-roam-ok-mv-cwd-to (dest)
   "Move the current directory under the directory DEST."
+  ;; TODO(2025-07-21): Remove the mv-pwd-to dependency.
   (interactive "DPick the destination directory: ")
   (let* ((node (save-excursion (beginning-of-buffer) (org-roam-node-at-point)))
          (id (org-roam-node-id node))
@@ -165,6 +169,20 @@ This function is used in place of `org-roam-node-slug'."
     (org-roam-db-sync)
     (org-roam-node-visit (org-roam-node-from-id id))
     (message "Moved %s to %s")))
+
+;;;###autoload
+(defun org-roam-ok-move-cwd (target)
+  "Move the current directory for the node at point to directory under TARGET."
+  (interactive "DPick the target parent directory: ")
+  (if-let* ((node (save-excursion (beginning-of-buffer)
+                                  (org-roam-node-at-point)))
+            (cwd (file-name-as-directory (expand-file-name default-directory)))
+            (dirname (file-name-nondirectory (directory-file-name cwd))))
+      (progn
+        (unless (file-exists-p target)
+          (make-directory target t))
+        (rename-file cwd (file-name-concat target dirname)))
+    (warn "Not an `org-roam' node")))
 
 (provide 'org-roam-ok-utils)
 ;;; org-roam-ok-utils.el ends here
