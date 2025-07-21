@@ -31,16 +31,16 @@
 (require 'org-roam-node)
 (require 'org-roam-timestamps)
 
-(defcustom oron-use-cache-in-memory t
+(defcustom org-roam-ok-node-use-cache-in-memory t
   "Set non-nil to use in-memory cache, set nil to disable it."
   :group 'org-roam-ok)
 
-(defcustom oron-project-org-file nil
+(defcustom org-roam-ok-node-project-org-file nil
   "Org file visited to load directory local variables."
   :group 'org-roam-ok)
 
 ;;; The directory local variables loader
-(defun oron-project-org-file--load (orig-func &rest rest)
+(defun org-roam-ok-node-project-org-file--load (orig-func &rest rest)
   "Load directory local variables by visiting an Org file.
 Use as the around advice for function ORIG-FUNC to load relevant
 per-project directory local variables associated with
@@ -50,13 +50,13 @@ purpose is to make a function like `org-roam-node-find' aware of
 `org-roam-directory' being set outside of the current context."
   (if (or (org-roam-file-p buffer-file-name)
           (minibufferp)
-          (null oron-project-org-file))
+          (null org-roam-ok-node-project-org-file))
       (cond ((called-interactively-p 'any) (call-interactively orig-func))
             (t (apply orig-func rest)))
     (let* ((find-file-hook (remq 'recentf-track-opened-file find-file-hook))
            (enable-local-variables :all)
-           (buffer-existed (get-file-buffer oron-project-org-file))
-           (buffer (find-file-noselect oron-project-org-file)))
+           (buffer-existed (get-file-buffer org-roam-ok-node-project-org-file))
+           (buffer (find-file-noselect org-roam-ok-node-project-org-file)))
       (with-current-buffer buffer
         (unwind-protect
             (cond ((called-interactively-p 'any) (call-interactively orig-func))
@@ -65,7 +65,7 @@ purpose is to make a function like `org-roam-node-find' aware of
               (kill-buffer buffer)))))))
 
 ;;; The parent property
-(defun oron--get-parent-property (node)
+(defun org-roam-ok-node--get-parent-property (node)
   "Get the parent property of NODE."
   (let* ((prop (org-roam-node-properties node))
          (parent (cdr (assoc-string "PARENT" prop)))
@@ -81,52 +81,52 @@ purpose is to make a function like `org-roam-node-find' aware of
            nil)
           (t extracted))))
 
-(defun oron--get-parent (&optional node)
+(defun org-roam-ok-node--get-parent (&optional node)
   "Get the parent of NODE if it exists."
   (cdr (assoc-string "PARENT"
                      (org-roam-node-properties
                       (or node
                           (org-roam-node-at-point))))))
 
-(defun oron-show-parent (node)
+(defun org-roam-ok-node-show-parent (node)
   "Show the parent of (file) NODE if exists."
   (interactive "P")
   (save-mark-and-excursion
     (beginning-of-buffer)
-    (let* ((parent (oron--get-parent node)))
+    (let* ((parent (org-roam-ok-node--get-parent node)))
       (if parent
           (message "Parent: %s" parent)
         (message "No parent found")))))
 
-(defun oron-visit-parent (node)
+(defun org-roam-ok-node-visit-parent (node)
   "Visit parent of given NODE at point, if exists."
   (interactive "P")
-  (let ((parent (oron--get-parent node)))
+  (let ((parent (org-roam-ok-node--get-parent node)))
     (if parent
         (org-link-open-from-string parent)
       (message "No parent found"))))
 
 ;;; The org-roam cache layer (sqlite)
-(defun oron--all-node-ids-within-file (file)
+(defun org-roam-ok-node--all-node-ids-within-file (file)
   "Get the IDs of all nodes within FILE."
   (mapcar 'car
           (org-roam-db-query `[:select :distinct nodes:id
                                        :from nodes
                                        :where (and (= nodes:file ,file))])))
 
-(defun oron--file-node-id (node)
+(defun org-roam-ok-node--file-node-id (node)
   "Get the ID of the top-level file node of NODE."
   (let ((file (org-roam-node-file node)))
     (caar (org-roam-db-query `[:select nodes:id :from nodes
                                        :where (and (= nodes:file ,file)
                                                    (= nodes:level 0))]))))
 
-(defun oron--all-file-nodes-and-ids ()
+(defun org-roam-ok-node--all-file-nodes-and-ids ()
   (org-roam-db-query '[:select [nodes:file nodes:id]
                                :from nodes
                                :where (= nodes:level 0)]))
 
-(defun oron--all-nodes ()
+(defun org-roam-ok-node--all-nodes ()
   (org-roam-db-query '[:select nodes:id :from nodes]))
 
 ;;; In-memory cache
@@ -135,95 +135,95 @@ purpose is to make a function like `org-roam-node-find' aware of
 ;;
 ;; TODO: Make the implementation memory efficient.
 
-(defvar oron--cache-in-memory-file (make-hash-table :test 'equal)
+(defvar org-roam-ok-node--cache-in-memory-file (make-hash-table :test 'equal)
   "In-memory cache, mapping a file to the ID of its top-level node.")
 
-(defun oron--cache-in-memory-clear ()
+(defun org-roam-ok-node--cache-in-memory-clear ()
   (interactive)
-  (setq oron--cache-in-memory (make-hash-table :test 'equal)
-        oron--cache-in-memory-file (make-hash-table :test 'equal)))
+  (setq org-roam-ok-node--cache-in-memory (make-hash-table :test 'equal)
+        org-roam-ok-node--cache-in-memory-file (make-hash-table :test 'equal)))
 
-(defun oron--cache-in-memory-file-get (file)
-  (when oron-use-cache-in-memory
-    (gethash file oron--cache-in-memory-file)))
+(defun org-roam-ok-node--cache-in-memory-file-get (file)
+  (when org-roam-ok-node-use-cache-in-memory
+    (gethash file org-roam-ok-node--cache-in-memory-file)))
 
-(defun oron--cache-in-memory-file-save (file node-id)
-  (when oron-use-cache-in-memory
-    (puthash file node-id oron--cache-in-memory-file)))
+(defun org-roam-ok-node--cache-in-memory-file-save (file node-id)
+  (when org-roam-ok-node-use-cache-in-memory
+    (puthash file node-id org-roam-ok-node--cache-in-memory-file)))
 
-(defun oron--cache-in-memory-file-remove (file)
-  (remhash file oron--cache-in-memory-file))
+(defun org-roam-ok-node--cache-in-memory-file-remove (file)
+  (remhash file org-roam-ok-node--cache-in-memory-file))
 
-(defun oron--cache-in-memory-file-fill ()
-  (dolist (row (oron--all-file-nodes-and-ids))
-    (oron--cache-in-memory-file-save (car row) (cadr row))))
+(defun org-roam-ok-node--cache-in-memory-file-fill ()
+  (dolist (row (org-roam-ok-node--all-file-nodes-and-ids))
+    (org-roam-ok-node--cache-in-memory-file-save (car row) (cadr row))))
 
-(defvar oron--cache-in-memory (make-hash-table :test 'equal)
+(defvar org-roam-ok-node--cache-in-memory (make-hash-table :test 'equal)
   "In-memory cache, mapping a node ID to its node.")
 
-(defun oron--cache-in-memory-get (node-id)
+(defun org-roam-ok-node--cache-in-memory-get (node-id)
   "Get the node for NODE-ID from the in-memory cache."
-  (when oron-use-cache-in-memory
-    (cdr (gethash node-id oron--cache-in-memory))))
+  (when org-roam-ok-node-use-cache-in-memory
+    (cdr (gethash node-id org-roam-ok-node--cache-in-memory))))
 
-(defun oron--cache-in-memory-save (node)
+(defun org-roam-ok-node--cache-in-memory-save (node)
   "Save NODE to the in-memory cache."
   (let* ((node-id (org-roam-node-id node))
          (level (org-roam-node-level node))
          (file-node-id (when (< 0 level)
                          (let* ((file (org-roam-node-file node))
-                                (id (oron--cache-in-memory-file-get file)))
+                                (id (org-roam-ok-node--cache-in-memory-file-get file)))
                            (if id
                                id
-                             (setq id (oron--file-node-id node))
-                             (oron--cache-in-memory-file-save file id)
+                             (setq id (org-roam-ok-node--file-node-id node))
+                             (org-roam-ok-node--cache-in-memory-file-save file id)
                              id))))
          (file-parent-node-id (when (= 0 level)
-                                (oron--get-parent-property node)))
+                                (org-roam-ok-node--get-parent-property node)))
          (item `(,node ,file-node-id ,file-parent-node-id)))
-    (when oron-use-cache-in-memory
-      (puthash node-id `(,(float-time) ,@item) oron--cache-in-memory))
+    (when org-roam-ok-node-use-cache-in-memory
+      (puthash node-id `(,(float-time) ,@item) org-roam-ok-node--cache-in-memory))
     item))
 
-(defun oron--cache-in-memory-remove (node-id)
+(defun org-roam-ok-node--cache-in-memory-remove (node-id)
   "Save NODE to the in-memory cache."
-  (remhash node-id oron--cache-in-memory))
+  (remhash node-id org-roam-ok-node--cache-in-memory))
 
-(defun oron--cache-in-memory-fill ()
-  (dolist (row (oron--all-nodes))
-    (oron--from-id (car row))))
+(defun org-roam-ok-node--cache-in-memory-fill ()
+  (dolist (row (org-roam-ok-node--all-nodes))
+    (org-roam-ok-node--from-id (car row))))
 
-(defun oron--cache-in-memory-maybe-remove ()
+(defun org-roam-ok-node--cache-in-memory-maybe-remove ()
   (let ((file buffer-file-name))
     (when (string= (file-name-extension file) "org")
-      (oron--cache-in-memory-file-remove file)
-      (dolist (node-id (oron--all-node-ids-within-file file))
-        (oron--cache-in-memory-remove node-id)))))
+      (org-roam-ok-node--cache-in-memory-file-remove file)
+      (dolist (node-id (org-roam-ok-node--all-node-ids-within-file file))
+        (org-roam-ok-node--cache-in-memory-remove node-id)))))
 
-(add-hook 'after-save-hook #'oron--cache-in-memory-maybe-remove)
+(add-hook 'after-save-hook #'org-roam-ok-node--cache-in-memory-maybe-remove)
 
 ;;; Node utility functions
 
-(defun oron--from-id (node-id)
+(defun org-roam-ok-node--from-id (node-id)
   "Get the node with NODE-ID either from in-memory cache or Org cache."
-  (let ((node (car (oron--cache-in-memory-get node-id))))
+  (let ((node (car (org-roam-ok-node--cache-in-memory-get node-id))))
     (if node
         node
       (setq node (org-roam-node-from-id node-id))
-      (oron--cache-in-memory-save node)
+      (org-roam-ok-node--cache-in-memory-save node)
       node)))
 
-(defun oron--file-node-from-id (node-id)
-  (let ((node-and-parent-id (oron--cache-in-memory-get node-id)))
+(defun org-roam-ok-node--file-node-from-id (node-id)
+  (let ((node-and-parent-id (org-roam-ok-node--cache-in-memory-get node-id)))
     (when (not node-and-parent-id)
-      (setq node-and-parent-id (oron--cache-in-memory-save (org-roam-node-from-id node-id))))
+      (setq node-and-parent-id (org-roam-ok-node--cache-in-memory-save (org-roam-node-from-id node-id))))
     (let ((parent-node-id (cadr node-and-parent-id)))
       (when parent-node-id
-        (oron--from-id parent-node-id)))))
+        (org-roam-ok-node--from-id parent-node-id)))))
 
-(defun oron--parent-titles (node)
+(defun org-roam-ok-node--parent-titles (node)
   "Get the title of the file NODE's parent."
-  (let* ((parent-id (caddr (oron--cache-in-memory-get (org-roam-node-id node))))
+  (let* ((parent-id (caddr (org-roam-ok-node--cache-in-memory-get (org-roam-node-id node))))
          (visited nil)
          titles)
     (catch 'circular
@@ -232,13 +232,13 @@ purpose is to make a function like `org-roam-node-find' aware of
             (progn
               (message "org-roam-ok-node: Circular nodes detected!")
               (throw 'circular nil)))
-        (setq node (oron--from-id parent-id))
+        (setq node (org-roam-ok-node--from-id parent-id))
         (setq titles (append titles `(,(org-roam-node-title node))))
         (setq visited (append visited `(,parent-id)))
-        (setq parent-id (caddr (oron--cache-in-memory-get parent-id))))
+        (setq parent-id (caddr (org-roam-ok-node--cache-in-memory-get parent-id))))
       titles)))
 
-(defun oron--title-aux-get (node)
+(defun org-roam-ok-node--title-aux-get (node)
   "Get the auxiliary title info for NODE."
   (let ((node-id (org-roam-node-id node))
         (title-or-alias (org-roam-node-title node))
@@ -248,15 +248,15 @@ purpose is to make a function like `org-roam-node-find' aware of
     (if (member title-or-alias (org-roam-node-aliases node))
         ;; `node' may have its title replaced with an alias, so pull
         ;; the title from the original node:
-        (list alias-delimiter (org-roam-node-title (oron--from-id node-id)))
+        (list alias-delimiter (org-roam-node-title (org-roam-ok-node--from-id node-id)))
       (setq sections
             (pcase (org-roam-node-level node)  ; 0 for file-level node
-              (0 (oron--parent-titles (oron--from-id node-id)))
-              (_ (or (oron--parent-titles (oron--file-node-from-id node-id))
+              (0 (org-roam-ok-node--parent-titles (org-roam-ok-node--from-id node-id)))
+              (_ (or (org-roam-ok-node--parent-titles (org-roam-ok-node--file-node-from-id node-id))
                      `(,(org-roam-node-file-title node))))))
       (flatten-list (mapcar (lambda (x) `(,section-delimiter ,x)) sections)))))
 
-(defun oron--title-aux-render (title-aux)
+(defun org-roam-ok-node--title-aux-render (title-aux)
   (if (not title-aux)
       ""
     (let ((face-sym `(:foreground ,(face-attribute 'completions-annotations
@@ -278,14 +278,14 @@ purpose is to make a function like `org-roam-node-find' aware of
 
 ;; Node attribute accessors
 
-(defun oron--title (node)
+(defun org-roam-ok-node--title (node)
   (concat (org-roam-node-title node)
-          (oron--title-aux-render (oron--title-aux-get node))))
+          (org-roam-ok-node--title-aux-render (org-roam-ok-node--title-aux-get node))))
 
 (cl-defmethod org-roam-node-ok-title ((node org-roam-node))
-  (oron--title node))
+  (org-roam-ok-node--title node))
 
-(defun oron--tags (node)
+(defun org-roam-ok-node--tags (node)
   (let ((tags (if (eq 0 (org-roam-node-level node))
                   ;; File-level node
                   (org-roam-node-tags node)
@@ -296,9 +296,9 @@ purpose is to make a function like `org-roam-node-find' aware of
     tags))
 
 (cl-defmethod org-roam-node-ok-tags ((node org-roam-node))
-  (format "#%s#" (string-join (oron--tags node) "#")))
+  (format "#%s#" (string-join (org-roam-ok-node--tags node) "#")))
 
-(defun oron--timestamp (node)
+(defun org-roam-ok-node--timestamp (node)
   (let* ((inhibit-message t)
          (mtime (cdr (assoc "MTIME" (org-roam-node-properties node))))
          (mtime (if mtime
@@ -307,9 +307,9 @@ purpose is to make a function like `org-roam-node-find' aware of
     (format-time-string "%Y-%m-%d" mtime)))
 
 (cl-defmethod org-roam-node-ok-timestamp ((node org-roam-node))
-  (oron--timestamp node))
+  (org-roam-ok-node--timestamp node))
 
-(defun oron--timestamp-marginalia (node)
+(defun org-roam-ok-node--timestamp-marginalia (node)
   (let* ((inhibit-message t)
          (mtime (cdr (assoc "MTIME" (org-roam-node-properties node))))
          (mtime (if mtime
@@ -318,20 +318,20 @@ purpose is to make a function like `org-roam-node-find' aware of
     (marginalia--time mtime)))
 
 (cl-defmethod org-roam-node-ok-timestamp-marginalia ((node org-roam-node))
-  (oron--timestamp-marginalia node))
+  (org-roam-ok-node--timestamp-marginalia node))
 
-(defun oron--slug (node)
+(defun org-roam-ok-node--slug (node)
   (org-roam-ok-string-to-org-slug (org-roam-node-title node)))
 
 (with-eval-after-load 'org-roam-node
   ;; NOTE: To ensure *override*, need to eval after `org-roam-node' gets loaded
   (cl-defmethod org-roam-node-slug ((node org-roam-node))
     "Return the slug of NODE."
-    (oron--slug node)))
+    (org-roam-ok-node--slug node)))
 
 ;;; Aliases
 
-(defun oron-alias-add-or-remove (&optional arg)
+(defun org-roam-ok-node-alias-add-or-remove (&optional arg)
   "Add an Org Roam alias.
 When called with the `\\[universal-argument]' prefix ARG, the alias
 is removed instead of added."
@@ -361,7 +361,7 @@ Otherwise, it is the same as the vanilla version of
 
 ;;; Tags
 
-(defun oron-tag-add-or-remove (&optional arg)
+(defun org-roam-ok-node-tag-add-or-remove (&optional arg)
   "Add an Org filetags or heading tag.
 When called with the `\\[universal-argument]' `\\[universal-argument]'
 `\\[universal-argument]' prefix ARG, the tag is removed instead of
@@ -376,13 +376,13 @@ added."
        ('(64) #'org-roam-tag-remove)
        (_ #'org-roam-tag-add)))))
 
-(cl-defun oron-nodes-with-backlinks (node)
+(cl-defun org-roam-ok-node-nodes-with-backlinks (node)
   "Get the nodes with backlinks to NODE."
   (--map (org-roam-backlink-source-node it) (org-roam-backlinks-get node)))
 
 ;;; Nodes selector
 
-(cl-defun oron-nodes-select (&key (days 7) (tags nil) (limit nil) (filter nil))
+(cl-defun org-roam-ok-node-nodes-select (&key (days 7) (tags nil) (limit nil) (filter nil))
   "Select nodes with TAGS within the last DAYS.
 When given, result will be truncated to LIMIT nodes."
   (require 'org-roam-ok-timestamps)
@@ -419,14 +419,14 @@ When given, result will be truncated to LIMIT nodes."
                   (let* ((node (org-roam-populate (org-roam-node-create :id (car row))))
                          (node (if (functionp filter) (apply filter `(,node)) node)))
                     (when node
-                      `(,(oron-mtime node) . ,node))))
+                      `(,(org-roam-ok-node-mtime node) . ,node))))
                 (org-roam-db-query sql))))
     (mapcar (lambda (e) (cdr e))
             (sort (--filter it rows)
                   :key (lambda (row) (car row))
                   :reverse t))))
 
-(defun oron-mtime (node)
+(defun org-roam-ok-node-mtime (node)
   "Access mtime of NODE."
   (first
    (string-split
@@ -436,26 +436,26 @@ When given, result will be truncated to LIMIT nodes."
 
 ;;; Node cashing
 
-(defvar oron-fill-caches--lock nil
+(defvar org-roam-ok-node-fill-caches--lock nil
   "Lock to ensure only one fill-caches session becomes active.")
 
-(defun oron-fill-caches ()
+(defun org-roam-ok-node-fill-caches ()
   "Fill all caches."
-  (if oron-fill-caches--lock
+  (if org-roam-ok-node-fill-caches--lock
       (message "Skipping as an active fill-caches session exists.")
-    (setq oron-fill-caches--lock t)
+    (setq org-roam-ok-node-fill-caches--lock t)
     (message "Filling caches from org-roam-directory (s)..."
              org-roam-directory)
-    (oron--cache-in-memory-fill)
-    (oron--cache-in-memory-file-fill)
-    (setq oron-fill-caches--lock nil)))
+    (org-roam-ok-node--cache-in-memory-fill)
+    (org-roam-ok-node--cache-in-memory-file-fill)
+    (setq org-roam-ok-node-fill-caches--lock nil)))
 
 ;;; Editing utilities
 
-(cl-defun oron-insert-backlinks ()
+(cl-defun org-roam-ok-node-insert-backlinks ()
   "Insert a backlinks section for node at point."
   (interactive)
-  (let ((nodes (oron-nodes-with-backlinks (org-roam-node-at-point))))
+  (let ((nodes (org-roam-ok-node-nodes-with-backlinks (org-roam-node-at-point))))
     (save-excursion
       (insert "* Backlinks\n")
       (dolist (node nodes)
@@ -464,7 +464,7 @@ When given, result will be truncated to LIMIT nodes."
           (insert (format "** [[id:%s][%s]]\n" id desc)))))))
 
 ;;;###autoload
-(defun oron-fill-caches-async ()
+(defun org-roam-ok-node-fill-caches-async ()
   "Run `org-roam-ok-node-fill-caches' in an async process."
   (interactive)
   (unless (and (boundp 'org-roam-ok-node-fill-caches--lock)
@@ -506,8 +506,4 @@ When given, result will be truncated to LIMIT nodes."
     ))
 
 (provide 'org-roam-ok-node)
-
-;; Local Variables:
-;; read-symbol-shorthands: (("oron" . "org-roam-ok-node"))
-;; End:
 ;;; org-roam-ok-node.el ends here

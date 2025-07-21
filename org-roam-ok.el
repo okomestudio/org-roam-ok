@@ -4,7 +4,7 @@
 ;;
 ;; Author: Taro Sato <okomestudio@gmail.com>
 ;; URL: https://github.com/okomestudio/org-roam-ok
-;; Version: 0.7.4
+;; Version: 0.7.5
 ;; Keywords: org-mode, roam, plug-in
 ;; Package-Requires: ((emacs "30.1") (org "9.7") (org-roam "20250527.1558") (async "1.9.7") (dash "2.19.1") (marginalia "1.6") (ok "0.2.3") (org-ref "20250301.1918") (org-roam-timestamps "1.0.0") (s "1.13.1"))
 ;;
@@ -37,7 +37,7 @@
   :group 'org-roam-ok
   :prefix "org-roam-ok-")
 
-(defvar org-roam-ok-version "0.6.1"
+(defvar org-roam-ok-version "0.7.5"
   "Package version.")
 
 (defcustom org-roam-ok-on-idle-delay 60

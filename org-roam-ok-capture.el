@@ -29,12 +29,12 @@
 (require 'org-roam-capture)
 (require 's)
 
-(defcustom oroc-template-directory nil
+(defcustom org-roam-ok-capture-template-directory nil
   "Template body directory.
 Each file in this directory should contain template body.")
 
 ;;;###autoload
-(defun oroc-templates-merge (templates)
+(defun org-roam-ok-capture-templates-merge (templates)
   "Merge TEMPLATES to `org-roam-capture-templates'.
 The TEMPLATES and `org-roam-capture-templates' are sorted by their
 keys (i.e., the CAR of each template in the list) separately, merged,
@@ -61,24 +61,24 @@ each template."
     (setq result (append result old-items new-items))
     (setopt org-roam-capture-templates (--filter (cadr it) result))))
 
-(defun oroc-template-as-string (template)
+(defun org-roam-ok-capture-template-as-string (template)
   "Read content of TEMPLATE as string.
-The TEMPLATE file is looked for in `oroc-template-directory'."
-  (let ((file (expand-file-name template oroc-template-directory)))
+The TEMPLATE file is looked for in `org-roam-ok-capture-template-directory'."
+  (let ((file (expand-file-name template org-roam-ok-capture-template-directory)))
     (with-temp-buffer
       (insert-file-contents file)
       (buffer-string))))
 
 ;;; Capture templates with Bibtex
 
-(defcustom oroc-type-to-capture-keys '((book . "b"))
+(defcustom org-roam-ok-capture-type-to-capture-keys '((book . "b"))
   "The mapping from Bibtex record type to capture keys.")
 
-(defcustom oroc-parent-from-citekey
+(defcustom org-roam-ok-capture-parent-from-citekey
   '(("SomeKeyPrefix" . "[[id:1234][Parent]]"))
   "Alist mapping refkey prefix to its parent node.")
 
-(defun oroc--format-author (authors)
+(defun org-roam-ok-capture--format-author (authors)
   "Format BibTeX AUTHORS list for `org-roam'.
 See `bibtex-completion-shorten-authors' for reference."
   (cl-loop for a in (s-split " and " authors)
@@ -92,7 +92,7 @@ See `bibtex-completion-shorten-authors' for reference."
                       (concat (car p) (cadr p))
                     (concat (cadr p) " " (car p)))))
 
-(defun oroc--prepare-capture ()
+(defun org-roam-ok-capture--prepare-capture ()
   "Prepare data for capture using a Bibtex item.
 This function prompts user for a Bibtex item."
   (let* ((record (bibtex-completion-get-entry (org-ref-read-key)))
@@ -114,13 +114,13 @@ This function prompts user for a Bibtex item."
      info
      (pcase type
        ("article"
-        `(:article-author ,(oroc--format-author
+        `(:article-author ,(org-roam-ok-capture--format-author
                             (alist-get "author" record  nil 'equal))))
        ("book"
-        `(:book-author ,(oroc--format-author
+        `(:book-author ,(org-roam-ok-capture--format-author
                          (alist-get "author" record "" nil 'equal))))
        ("online"
-        `(:article-author ,(oroc--format-author
+        `(:article-author ,(org-roam-ok-capture--format-author
                             (alist-get "author" record "" nil 'equal))))
        ("podcast"
         (let ((parent
@@ -128,43 +128,39 @@ This function prompts user for a Bibtex item."
                        (format "^\\(%s\\)[0-9]+"
                                (s-join "\\|"
                                        (--map (car it)
-                                              oroc-parent-from-citekey))))
+                                              org-roam-ok-capture-parent-from-citekey))))
                       (matched (if (string-match pattern key)
                                    (match-string 1 key)
                                  "")))
-                 (alist-get matched oroc-parent-from-citekey key nil 'equal))))
-          `( :podcast-guest ,(oroc--format-author
+                 (alist-get matched org-roam-ok-capture-parent-from-citekey key nil 'equal))))
+          `( :podcast-guest ,(org-roam-ok-capture--format-author
                               (alist-get "guest" record "" nil 'equal))
              :parent ,parent )))))
     `( :type ,type
        :node ,(org-roam-node-create :title title)
        :info (:citekey ,citekey ,@info) )))
 
-(defun oroc-prompt-for-citekey-if-missing ()
+(defun org-roam-ok-capture-prompt-for-citekey-if-missing ()
   "If citekey is not set, this function will prompt user for a Bibtex item."
   (when (not (plist-member org-roam-capture--info :citekey))
-    (let* ((result (oroc--prepare-capture))
+    (let* ((result (org-roam-ok-capture--prepare-capture))
            (node (plist-get result :node))
            (info (plist-get result :info)))
       (setf (org-roam-node-title org-roam-capture--node) (org-roam-node-title node))
       (setq org-roam-capture--info info))))
 
-(defun oroc-create-from-ref ()
+(defun org-roam-ok-capture-create-from-ref ()
   "Capture from a Bibtex item."
   (interactive)
-  (let* ((result (oroc--prepare-capture))
+  (let* ((result (org-roam-ok-capture--prepare-capture))
          (type (intern (plist-get result :type)))
          (org-roam-capture--node (plist-get result :node))
          (org-roam-capture--info (plist-get result :info))
-         (capture-keys (alist-get type oroc-type-to-capture-keys)))
+         (capture-keys (alist-get type org-roam-ok-capture-type-to-capture-keys)))
     (org-roam-capture- :keys capture-keys
                        :node org-roam-capture--node
                        :info org-roam-capture--info
                        :props '(:immediate-finish nil))))
 
 (provide 'org-roam-ok-capture)
-
-;; Local Variables:
-;; read-symbol-shorthands: (("oroc" . "org-roam-ok-capture"))
-;; End:
 ;;; org-roam-ok-capture.el ends here
