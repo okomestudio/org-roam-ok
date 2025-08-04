@@ -4,18 +4,18 @@
 ;;
 ;;; License:
 ;;
-;; This program is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation, either version 3 of the License, or
-;; (at your option) any later version.
+;; This program is free software; you can redistribute it and/or modify it under
+;; the terms of the GNU General Public License as published by the Free Software
+;; Foundation, either version 3 of the License, or (at your option) any later
+;; version.
 ;;
-;; This program is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU General Public License for more details.
+;; This program is distributed in the hope that it will be useful, but WITHOUT
+;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+;; FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+;; details.
 ;;
-;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+;; You should have received a copy of the GNU General Public License along with
+;; this program. If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;;; Commentary:
 ;;
@@ -30,6 +30,7 @@
 (require 'marginalia)
 (require 'org-roam-node)
 (require 'org-roam-timestamps)
+(require 'ok)
 
 (defcustom org-roam-ok-node-use-cache-in-memory t
   "Set non-nil to use in-memory cache, set nil to disable it."
@@ -321,7 +322,7 @@ purpose is to make a function like `org-roam-node-find' aware of
   (org-roam-ok-node--timestamp-marginalia node))
 
 (defun org-roam-ok-node--slug (node)
-  (org-roam-ok-string-to-org-slug (org-roam-node-title node)))
+  (ok-string-text-to-slug (org-roam-node-title node)))
 
 (with-eval-after-load 'org-roam-node
   ;; NOTE: To ensure *override*, need to eval after `org-roam-node' gets loaded
