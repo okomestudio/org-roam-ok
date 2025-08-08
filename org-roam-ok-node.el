@@ -14,8 +14,8 @@
 ;; FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
 ;; details.
 ;;
-;; You should have received a copy of the GNU General Public License along with
-;; this program. If not, see <https://www.gnu.org/licenses/>.
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;;; Commentary:
 ;;
@@ -32,7 +32,7 @@
 (require 'org-roam-timestamps)
 (require 'ok)
 
-(defcustom org-roam-ok-node-use-cache-in-memory t
+(defcustom org-roam-ok-node-use-cache-in-memory nil
   "Set non-nil to use in-memory cache, set nil to disable it."
   :group 'org-roam-ok)
 
@@ -153,7 +153,10 @@ purpose is to make a function like `org-roam-node-find' aware of
     (puthash file node-id org-roam-ok-node--cache-in-memory-file)))
 
 (defun org-roam-ok-node--cache-in-memory-file-remove (file)
-  (remhash file org-roam-ok-node--cache-in-memory-file))
+  "Remove the modified FILE and all its ID references from the in-memory cache."
+  (remhash file org-roam-ok-node--cache-in-memory-file)
+  (dolist (node-id (org-roam-ok-node--all-node-ids-within-file file))
+    (org-roam-ok-node--cache-in-memory-remove node-id)))
 
 (defun org-roam-ok-node--cache-in-memory-file-fill ()
   (dolist (row (org-roam-ok-node--all-file-nodes-and-ids))
@@ -187,21 +190,40 @@ purpose is to make a function like `org-roam-node-find' aware of
     item))
 
 (defun org-roam-ok-node--cache-in-memory-remove (node-id)
-  "Save NODE to the in-memory cache."
+  "Save NODE-ID to the in-memory cache."
   (remhash node-id org-roam-ok-node--cache-in-memory))
 
 (defun org-roam-ok-node--cache-in-memory-fill ()
   (dolist (row (org-roam-ok-node--all-nodes))
     (org-roam-ok-node--from-id (car row))))
 
-(defun org-roam-ok-node--cache-in-memory-maybe-remove ()
-  (let ((file buffer-file-name))
-    (when (string= (file-name-extension file) "org")
-      (org-roam-ok-node--cache-in-memory-file-remove file)
-      (dolist (node-id (org-roam-ok-node--all-node-ids-within-file file))
-        (org-roam-ok-node--cache-in-memory-remove node-id)))))
+(defun org-roam-ok-node--cache-in-memory-on-after-save ()
+  "Remove modified file and all its ID references from cache."
+  (when-let* ((file buffer-file-name)
+              (_ (and (string= (file-name-extension file) "org")
+                      org-roam-ok-node-use-cache-in-memory)))
+    (org-roam-ok-node--cache-in-memory-file-remove file)))
 
-(add-hook 'after-save-hook #'org-roam-ok-node--cache-in-memory-maybe-remove)
+(add-hook 'after-save-hook #'org-roam-ok-node--cache-in-memory-on-after-save)
+
+(defun org-roam-ok-node--cache-in-memory-rename-file-a (fun &rest _args)
+  "Evict the files from the in-memory cache before moving them.
+Use as an around advice for FUN (`rename-file')."
+  (if org-roam-ok-node-use-cache-in-memory
+      (let* ((file (nth 0 _args))
+             (newname (nth 1 _args)))
+        (if (and (file-exists-p file)
+                 (not (file-directory-p file)))
+            (when (string= (file-name-extension file) "org")
+              (org-roam-ok-node--cache-in-memory-file-remove file))
+          (dolist (f (directory-files-recursively file "\\.org\\'"))
+            (org-roam-ok-node--cache-in-memory-file-remove f)))
+        (apply fun _args))
+    (apply fun _args)))
+
+(advice-add #'rename-file :around #'org-roam-ok-node--cache-in-memory-rename-file-a)
+
+;; TODO(2025-08-04): add update around rename-file
 
 ;;; Node utility functions
 
