@@ -583,14 +583,17 @@ as the display template function, set this function to
   (let* ((total-width (or total-width (frame-width)))
 
          (title (funcall org-roam-ok-node-display-title node))
+         (face-tag (list :background
+                         (or (and (bound-and-true-p org-modern-mode)
+                                  (face-attribute 'org-modern-tag :background))
+                             (face-attribute 'highlight :background))))
          (tags (mapconcat
                 (lambda (s)
-                  (let (r)
-                    (setq r (concat ":" s ":"))
+                  (let* ((r (concat ":" s ":"))
+                         (len (length r)))
                     (put-text-property 0 1 'invisible t r)
-                    (put-text-property (- (length r) 1) (length r)
-                                       'invisible t r)
-                    (setq r (propertize r 'face 'highlight))))
+                    (put-text-property (1- len) len 'invisible t r)
+                    (propertize r 'face face-tag)))
                 (or (org-roam-ok-node--tags node) nil)
                 " "))
          (timestamp (org-roam-ok-node--timestamp node))
