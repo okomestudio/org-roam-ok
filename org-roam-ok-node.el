@@ -40,7 +40,8 @@
   "Org file visited to load directory local variables."
   :group 'org-roam-ok)
 
-;;; The directory local variables loader
+;;; The Directory Local Variables Loader
+
 (defun org-roam-ok-node-project-org-file--load (orig-func &rest rest)
   "Load directory local variables by visiting an Org file.
 Use as the around advice for function ORIG-FUNC to load relevant
@@ -65,7 +66,8 @@ purpose is to make a function like `org-roam-node-find' aware of
           (if (null buffer-existed)
               (kill-buffer buffer)))))))
 
-;;; The parent property
+;;; The Parent Property
+
 (defun org-roam-ok-node--get-parent-property (node)
   "Get the parent property of NODE."
   (let* ((prop (org-roam-node-properties node))
@@ -107,7 +109,8 @@ purpose is to make a function like `org-roam-node-find' aware of
         (org-link-open-from-string parent)
       (message "No parent found"))))
 
-;;; The org-roam cache layer (sqlite)
+;;; The org-roam Cache Layer (Sqlite)
+
 (defun org-roam-ok-node--all-node-ids-within-file (file)
   "Get the IDs of all nodes within FILE."
   (mapcar 'car
@@ -130,7 +133,7 @@ purpose is to make a function like `org-roam-node-find' aware of
 (defun org-roam-ok-node--all-nodes ()
   (org-roam-db-query '[:select nodes:id :from nodes]))
 
-;;; In-memory cache
+;;; In-memory Cache
 ;;
 ;; This caching layer exists to speed up the interactive node query.
 ;;
@@ -225,7 +228,7 @@ Use as an around advice for FUN (`rename-file')."
 
 ;; TODO(2025-08-04): add update around rename-file
 
-;;; Node utility functions
+;;; Node Utility Functions
 
 (defun org-roam-ok-node--from-id (node-id)
   "Get the node with NODE-ID either from in-memory cache or Org cache."
@@ -297,7 +300,7 @@ Use as an around advice for FUN (`rename-file')."
                                  (propertize aux 'face face-aux)))))
       rendered)))
 
-;;; Public functions and methods
+;;; Public Functions and Methods
 
 ;; Node attribute accessors
 
@@ -403,7 +406,7 @@ added."
   "Get the nodes with backlinks to NODE."
   (--map (org-roam-backlink-source-node it) (org-roam-backlinks-get node)))
 
-;;; Nodes selector
+;;; Nodes Selector
 
 (cl-defun org-roam-ok-node-nodes-select (&key (days 7) (tags nil) (limit nil) (filter nil))
   "Select nodes with TAGS within the last DAYS.
@@ -457,7 +460,7 @@ When given, result will be truncated to LIMIT nodes."
                nil nil 'equal)
     " ")))
 
-;;; Node cashing
+;;; Node Cashing
 
 (defvar org-roam-ok-node-fill-caches--lock nil
   "Lock to ensure only one fill-caches session becomes active.")
@@ -473,7 +476,7 @@ When given, result will be truncated to LIMIT nodes."
     (org-roam-ok-node--cache-in-memory-file-fill)
     (setq org-roam-ok-node-fill-caches--lock nil)))
 
-;;; Editing utilities
+;;; Editing Utilities
 
 (cl-defun org-roam-ok-node-insert-backlinks ()
   "Insert a backlinks section for node at point."
@@ -527,6 +530,89 @@ When given, result will be truncated to LIMIT nodes."
                  org-roam-ok-node-fill-caches--lock nil)))))
     ;; (switch-to-buffer "*emacs*")
     ))
+
+;;; Display Templates
+
+(defcustom org-roam-ok-node-display-title #'org-roam-ok-node--title
+  "Node title getter function for display template."
+  :group 'org-roam-ok)
+
+(defun org-roam-ok-node-display-template (node &optional total-width)
+  "Render NODE using display template and cache.
+When not given, TOTAL-WIDTH defaults to the current `frame-width'. To use this
+as the display template function, set this function to
+`org-roam-node-display-template'."
+  (let* ((total-width (or total-width (frame-width)))
+
+         (title (funcall org-roam-ok-node-display-title node))
+         (tags (mapconcat
+                (lambda (s)
+                  (let (r)
+                    (setq r (concat ":" s ":"))
+                    (put-text-property 0 1 'invisible t r)
+                    (put-text-property (- (length r) 1) (length r)
+                                       'invisible t r)
+                    (setq r (propertize r 'face 'highlight))))
+                (or (org-roam-ok-node--tags node) nil)
+                " "))
+         (timestamp (org-roam-ok-node--timestamp node))
+
+         (multibyte-scale 1.7)
+         (tag-scale 1.0)
+
+         (timestamp-width (1+ (length timestamp)))
+         (title-and-tags-width (- total-width timestamp-width))
+         (tags-width (1+ (round (* (length tags) tag-scale))))
+         (max-title-width (- title-and-tags-width tags-width))
+         (title-width (ok-string-multibyte-string-width title multibyte-scale)))
+    (if (>= title-width max-title-width)
+        (let ((thresh (length (ok-string-multibyte-substring
+                               title 0 max-title-width multibyte-scale))))
+          (put-text-property 0 (1- thresh) 'invisible nil title)
+          (put-text-property thresh (length title) 'invisible t title))
+      (put-text-property 0 (length title) 'invisible nil title)
+      (setq title (concat title
+                          (make-string (- max-title-width title-width) ?\ ))))
+    (concat title " " tags " " timestamp)))
+
+(defun org-roam-ok-node-display-template-beta (node &optional total-width)
+  "Render NODE using display template and cache.
+When not given, TOTAL-WIDTH defaults to the current `frame-width'. To use this
+as the display template function, set this function to
+`org-roam-node-display-template'."
+  (let* ((total-width (or total-width (frame-width)))
+
+         (title (funcall org-roam-ok-node-display-title node))
+         (tags (mapconcat
+                (lambda (s)
+                  (let (r)
+                    (setq r (concat ":" s ":"))
+                    (put-text-property 0 1 'invisible t r)
+                    (put-text-property (- (length r) 1) (length r)
+                                       'invisible t r)
+                    (setq r (propertize r 'face 'highlight))))
+                (or (org-roam-ok-node--tags node) nil)
+                " "))
+         (timestamp (org-roam-ok-node--timestamp node))
+
+         (multibyte-scale 1.667) ; assume hankaku:zenkaku of 3:5
+         (tag-scale 1.0)
+
+         (right-aligned-width (1+ (length timestamp)))
+         (left-aligned-width (- total-width right-aligned-width))
+
+         (tags-width (1+ (round (* (length tags) tag-scale))))
+         (max-title-width (- left-aligned-width tags-width 1))
+         (title-width (ok-string-multibyte-string-width title multibyte-scale))
+         (padding ""))
+    (if (>= title-width max-title-width)
+        (let ((thresh (length (ok-string-multibyte-substring
+                               title 0 max-title-width multibyte-scale))))
+          (put-text-property 0 (1- thresh) 'invisible nil title)
+          (put-text-property thresh (length title) 'invisible t title))
+      (put-text-property 0 (length title) 'invisible nil title)
+      (setq padding (make-string (- max-title-width title-width) ?\ )))
+    (concat title " " tags padding " " timestamp)))
 
 (provide 'org-roam-ok-node)
 ;;; org-roam-ok-node.el ends here
