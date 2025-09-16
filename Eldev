@@ -6,5 +6,6 @@
 (eldev-use-package-archive 'gnu-elpa)
 (eldev-use-package-archive 'melpa)
 (eldev-use-vc-repository 'ok :github "okomestudio/ok.el")
+(eldev-use-vc-repository 'org-ok :github "okomestudio/org-ok")
 
 (eldev-add-extra-dependencies 'test 'biblio)

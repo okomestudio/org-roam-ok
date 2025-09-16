@@ -1,21 +1,21 @@
-;;; org-roam-ok-capture.el --- Plugin for org-roam-capture  -*- lexical-binding: t -*-
+;;; org-roam-ok-capture.el --- org-roam-capture Plugin  -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2024-2025 Taro Sato
 ;;
 ;;; License:
 ;;
-;; This program is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation, either version 3 of the License, or
-;; (at your option) any later version.
+;; This program is free software; you can redistribute it and/or modify it under
+;; the terms of the GNU General Public License as published by the Free Software
+;; Foundation, either version 3 of the License, or (at your option) any later
+;; version.
 ;;
-;; This program is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU General Public License for more details.
+;; This program is distributed in the hope that it will be useful, but WITHOUT
+;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+;; FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+;; details.
 ;;
-;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+;; You should have received a copy of the GNU General Public License along with
+;; this program. If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;;; Commentary:
 ;;
@@ -25,6 +25,7 @@
 
 (require 'dash)
 (require 'ok)
+(require 'org-ok)
 (require 'org-ref)
 (require 'org-roam-capture)
 (require 's)
@@ -78,20 +79,6 @@ The TEMPLATE file is looked for in `org-roam-ok-capture-template-directory'."
   '(("SomeKeyPrefix" . "[[id:1234][Parent]]"))
   "Alist mapping refkey prefix to its parent node.")
 
-(defun org-roam-ok-capture--format-author (authors)
-  "Format BibTeX AUTHORS list for `org-roam'.
-See `bibtex-completion-shorten-authors' for reference."
-  (cl-loop for a in (s-split " and " authors)
-           for p = (--map (s-trim it) (s-split "," a t))
-           for sep = "" then ", "
-           concat sep
-           if (eq 1 (length p))
-           concat (car p)
-           else
-           concat (if (ok-string-contains-ja-p (car p))
-                      (concat (car p) (cadr p))
-                    (concat (cadr p) " " (car p)))))
-
 (defun org-roam-ok-capture--prepare-capture ()
   "Prepare data for capture using a Bibtex item.
 This function prompts user for a Bibtex item."
@@ -114,13 +101,13 @@ This function prompts user for a Bibtex item."
      info
      (pcase type
        ("article"
-        `(:article-author ,(org-roam-ok-capture--format-author
+        `(:article-author ,(org-ok-ref-format-author
                             (alist-get "author" record  nil 'equal))))
        ("book"
-        `(:book-author ,(org-roam-ok-capture--format-author
+        `(:book-author ,(org-ok-ref-format-author
                          (alist-get "author" record "" nil 'equal))))
        ("online"
-        `(:article-author ,(org-roam-ok-capture--format-author
+        `(:article-author ,(org-ok-ref-format-author
                             (alist-get "author" record "" nil 'equal))))
        ("podcast"
         (let ((parent
@@ -133,7 +120,7 @@ This function prompts user for a Bibtex item."
                                    (match-string 1 key)
                                  "")))
                  (alist-get matched org-roam-ok-capture-parent-from-citekey key nil 'equal))))
-          `( :podcast-guest ,(org-roam-ok-capture--format-author
+          `( :podcast-guest ,(org-ok-ref-format-author
                               (alist-get "guest" record "" nil 'equal))
              :parent ,parent )))))
     `( :type ,type
