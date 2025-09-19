@@ -102,7 +102,7 @@ This function prompts user for a Bibtex item."
      (pcase type
        ("article"
         `(:article-author ,(org-ok-ref-format-author
-                            (alist-get "author" record  nil 'equal))))
+                            (alist-get "author" record "" nil 'equal))))
        ("book"
         `(:book-author ,(org-ok-ref-format-author
                          (alist-get "author" record "" nil 'equal))))
