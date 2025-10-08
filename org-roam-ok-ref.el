@@ -69,7 +69,14 @@
 ;;;###autoload
 (defun org-roam-ok-ref-search-buffer (key)
   "Open the ref search buffer for citation KEY."
-  (interactive (list (org-ref-read-key)))
+  (interactive
+   (list (if-let* ((context (org-element-context))
+                   (link (and (eq (org-element-type context) 'link)
+                              (org-element-property :raw-link context)))
+                   (key (when (string-match "^cite:[@&]?\\(.*\\)$" link)
+                          (match-string 1 link))))
+             key
+           (org-ref-read-key))))
   (let ((buffer (generate-new-buffer
                  (format "%s<%s>" org-roam-ok-ref-search-buffer key))))
     (switch-to-buffer buffer)
