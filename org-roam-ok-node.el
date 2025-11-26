@@ -367,24 +367,6 @@ is removed instead of added."
      ('(4) #'org-roam-alias-remove)
      (_ #'org-roam-alias-add))))
 
-;;; Refs
-
-(defun org-roam-ok-node-ref-find (&optional _)
-  "Call the enhanced version of `org-roam-ref-find'.
-If the point is on a link and it is a cite link, then
-`org-roam-ref-find' is given the citekey as the initial string.
-Otherwise, it is the same as the vanilla version of
-`org-roam-ref-find'."
-  (interactive)
-  (let* ((link (org-element-lineage (org-element-context) '(link) t))
-         (type (org-element-property :type link))
-         (path (org-element-property :path link))
-         (ref (cond
-               ((string= type "cite")
-                (string-trim-left path "&"))
-               (t ""))))
-    (org-roam-ref-find ref)))
-
 ;;; Tags
 
 (defun org-roam-ok-node-tag-add-or-remove (&optional arg)

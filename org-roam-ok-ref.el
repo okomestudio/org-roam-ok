@@ -25,6 +25,21 @@
 
 (require 'org-roam)
 
+(defun org-roam-ok-ref--find (fun &optional initial-input filter-fn)
+  "Advise FUN (`org-roam-ref-find').
+If the point is on an Org link for a cite link, use it as the INITIAL-INPUT for
+`org-roam-ref-find'. FILTER-FN is passed through."
+  (when (derived-mode-p 'org-mode)
+    (when-let* ((link (org-element-lineage (org-element-context) '(link) t))
+                (type (org-element-property :type link))
+                (path (org-element-property :path link))
+                (ref (cond ((string= type "cite")
+                            (string-trim-left path "&")))))
+      (setq initial-input ref)))
+  (funcall fun initial-input filter-fn))
+
+(advice-add #'org-roam-ref-find :around #'org-roam-ok-ref--find)
+
 (defun org-roam-ok-ref-reflinks-get (key)
   "Return the reflinks for citation KEY."
   (let ((refs (org-roam-db-query
