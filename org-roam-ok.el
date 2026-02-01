@@ -1,10 +1,10 @@
 ;;; org-roam-ok.el --- Org Roam Okome Studio Plugin  -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2024-2025 Taro Sato
+;; Copyright (C) 2024-2026 Taro Sato
 ;;
 ;; Author: Taro Sato <okomestudio@gmail.com>
 ;; URL: https://github.com/okomestudio/org-roam-ok
-;; Version: 0.13.1
+;; Version: 0.13.2
 
 ;; Keywords: org-mode, roam, plug-in
 ;; Package-Requires: ((emacs "30.1") (org "9.7") (org-ok "0.5.1") (org-roam "2.3.1") (async "1.9.7") (dash "2.20") (marginalia "1.6") (ok "0.12.2") (org-ref "3.1") (org-roam-timestamps "1.0.0") (s "1.13.1"))
@@ -38,7 +38,7 @@
   :group 'org-roam-ok
   :prefix "org-roam-ok-")
 
-(defvar org-roam-ok-version "0.13.1"
+(defvar org-roam-ok-version "0.13.2"
   "Package version.")
 
 (defcustom org-roam-ok-on-idle-delay 60

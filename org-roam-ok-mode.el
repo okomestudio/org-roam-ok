@@ -1,6 +1,6 @@
 ;;; org-roam-ok-mode.el --- Plugin for org-roam-mode  -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2024-2025 Taro Sato
+;; Copyright (C) 2024-2026 Taro Sato
 ;;
 ;;; License:
 ;;

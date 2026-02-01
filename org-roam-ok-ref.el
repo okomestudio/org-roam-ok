@@ -1,6 +1,6 @@
 ;;; org-roam-ok-ref.el --- References Utilities -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2025 Taro Sato
+;; Copyright (C) 2024-2026 Taro Sato
 ;;
 ;;; License:
 ;;

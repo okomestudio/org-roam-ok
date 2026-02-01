@@ -1,6 +1,6 @@
 ;;; org-roam-ok-node.el --- Plugin for org-roam-node  -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2024-2025 Taro Sato
+;; Copyright (C) 2024-2026 Taro Sato
 ;;
 ;;; License:
 ;;
@@ -598,6 +598,90 @@ as the display template function, set this function to
       (put-text-property 0 (length title) 'invisible nil title)
       (setq padding (make-string (- max-title-width title-width) ?\ )))
     (concat title " " tags padding " " timestamp)))
+
+;;; ID Replacement
+
+(defun org-roam-ok-node-replace-id (new-id &optional id)
+  "Replace ID of node to NEW-ID.
+The function replaces ID of a node to NEW-ID, as well as those IDs within the
+nodes referenced via the backlinks of node with ID. If ID is not provided,
+it is set from the current node."
+  (interactive "sNew ID: ")
+  (if-let* ((this-node (or (and id (org-roam-node-from-id id))
+                           (org-roam-node-at-point)))
+            (id (org-roam-node-id this-node)))
+      (let* ((nodes (append (mapcar
+                             (lambda (backlink)
+                               (org-roam-backlink-source-node backlink))
+                             (org-roam-backlinks-get this-node :unique t))
+                            (list this-node)))
+             (pattern (format "\\[\\[id:%s\\(::\\|\\]\\)" id))
+             modified-buffers)
+        ;; Replace ID in the node itself.
+        (with-current-buffer
+            (find-file-noselect (org-roam-node-file this-node))
+          (org-entry-put this-node "ID" new-id))
+
+        ;; Replace all occurrences.
+        (dolist (node nodes)
+          (let ((file (org-roam-node-file node)))
+
+            (with-current-buffer (find-file-noselect file)
+              (goto-char (point-min))
+              (while (re-search-forward pattern nil t)
+                (replace-match
+                 (concat "[[id:" new-id (match-string 1))
+                 ;; (if-let* ((full-match (match-string 0))
+                 ;;           (desc (match-string 2)))
+                 ;;     (format "[[id:%s][%s]]" new-id desc)
+                 ;;   (format "[[id:%s]]" new-id))
+                 ))
+              (when (buffer-modified-p)
+                (save-buffer)
+                (org-roam-db-update-file file))))))
+    (error "Node with OLD-ID not found" id)))
+
+;;; Subdirectories
+
+(defcustom org-roam-ok-node-subdirectory nil
+  "Alist of entry name to subdirectory path relative to `org-roam-directory'."
+  :type '(alist :key-type symbol :value-type string)
+  :group 'org-roam-ok)
+
+(defun org-roam-ok-node-subdirectory--pick (&optional prompt)
+  "Pick subdirectory from `org-roam-ok-node-subdirectory'.
+The optional PROMPT string overrides the default message."
+  (when-let* ((cs (--map (pcase-let* ((`(,sym . ,rdir) it))
+                           (cons (format "%s (%s)" sym rdir)
+                                 (expand-file-name rdir org-roam-directory)))
+                         org-roam-ok-node-subdirectory)))
+    (alist-get (completing-read (or prompt "Subdirectory: ")
+                                (--map (car it) cs)
+                                nil t)
+               cs nil nil #'equal)))
+
+(defun org-roam-ok-node-mv (&optional node new-subdir)
+  "Move NODE under NEW-SUBDIR."
+  (interactive (list (org-roam-node-at-point)
+                     (org-roam-ok-node-subdirectory--pick)))
+  (if-let* ((_ new-subdir)
+            (this-file (org-roam-node-file node))
+            (this-parent (file-name-directory this-file))
+            (this-subdir (file-name-parent-directory
+                          (file-name-parent-directory this-file)))
+            (rel-file (file-relative-name this-file this-subdir))
+            (new-file (file-name-concat new-subdir re-file))
+            (new-parent (file-name-directory new-file)))
+      (progn
+        (make-directory new-parent t)
+        (org-roam-db-clear-file this-file)
+        (rename-file this-parent new-parent 1)
+        (when-let* ((buffer (find-buffer-visiting this-file)))
+          (with-current-buffer buffer
+            (set-visited-file-name new-file)
+            (revert-buffer :ignore-auto :noconfirm)))
+        (org-roam-db-update-file new-file))
+    (error "Problem moving node")))
 
 (provide 'org-roam-ok-node)
 ;;; org-roam-ok-node.el ends here
