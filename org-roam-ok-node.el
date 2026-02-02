@@ -695,7 +695,10 @@ The optional PROMPT string overrides the default message."
 
 (cl-defun org-roam-ok-node-rename-visited-file-maybe ()
   "Rename file if different from one generated with title slug."
-  (if-let* ((node (when (org-roam-buffer-p) (org-roam-node-at-point)))
+  (if-let* ((node (when (and (buffer-file-name) (org-roam-file-p))
+                    (save-excursion
+                      (goto-char (point-min))
+                      (org-roam-node-at-point))))
             (slug (ok-string-text-to-slug (org-roam-node-title node)))
             (file-name (format "%s.org" slug))
             (parent-dir (file-name-directory buffer-file-name)))
