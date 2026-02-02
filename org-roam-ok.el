@@ -4,7 +4,7 @@
 ;;
 ;; Author: Taro Sato <okomestudio@gmail.com>
 ;; URL: https://github.com/okomestudio/org-roam-ok
-;; Version: 0.13.3
+;; Version: 0.14.1
 
 ;; Keywords: org-mode, roam, plug-in
 ;; Package-Requires: ((emacs "30.1") (org "9.7") (org-ok "0.5.1") (org-roam "2.3.1") (async "1.9.7") (dash "2.20") (marginalia "1.6") (ok "0.12.2") (org-ref "3.1") (org-roam-timestamps "1.0.0") (s "1.13.1"))
@@ -38,7 +38,7 @@
   :group 'org-roam-ok
   :prefix "org-roam-ok-")
 
-(defvar org-roam-ok-version "0.13.3"
+(defvar org-roam-ok-version "0.14.1"
   "Package version.")
 
 (defcustom org-roam-ok-on-idle-delay 60
@@ -92,6 +92,8 @@ When set to nil, the on-idle initializer will not run."
   (setopt find-file-visit-truename t)  ; see "5.3 Setting up Org-roam"
   (setopt org-roam-node-display-template #'org-roam-ok-node-display-template-beta)
 
+  (add-hook 'before-save-hook #'org-roam-ok-node-rename-visited-file-maybe)
+
   (org-roam-timestamps-mode 1)
 
   ;; Wrap these functions so that each will load the project .dir-locals.el
@@ -103,6 +105,7 @@ When set to nil, the on-idle initializer will not run."
 
 (defun org-roam-ok-deactivate ()
   "Deactivate `org-roam-ok-mode'."
+  (remove-hook 'before-save-hook #'org-roam-ok-node-rename-visited-file-maybe)
   (remove-hook 'after-save-hook #'org-roam-ok-node-display--cache-maybe-remove))
 
 ;;;###autoload

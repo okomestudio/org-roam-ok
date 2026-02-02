@@ -670,7 +670,7 @@ The optional PROMPT string overrides the default message."
             (this-subdir (file-name-parent-directory
                           (file-name-parent-directory this-file)))
             (rel-file (file-relative-name this-file this-subdir))
-            (new-file (file-name-concat new-subdir re-file))
+            (new-file (file-name-concat new-subdir rel-file))
             (new-parent (file-name-directory new-file)))
       (progn
         (make-directory new-parent t)
@@ -682,6 +682,46 @@ The optional PROMPT string overrides the default message."
             (revert-buffer :ignore-auto :noconfirm)))
         (org-roam-db-update-file new-file))
     (error "Problem moving node")))
+
+;;; Misc.
+
+(cl-defun org-roam-ok-node-rename-visited-file-maybe ()
+  "Rename file if different from one generated with title slug."
+  (if-let* ((node (when (org-roam-buffer-p) (org-roam-node-at-point)))
+            (slug (ok-string-text-to-slug (org-roam-node-title node)))
+            (file-name (format "%s.org" slug))
+            (parent-dir (file-name-directory buffer-file-name)))
+      (unless (string= buffer-file-name
+                       (file-name-concat parent-dir file-name))
+        (when-let* ((s (read-file-name "Rename file with title slug: "
+                                       nil nil nil file-name)))
+          (rename-visited-file s)))))
+
+(cl-defun org-roam-ok-node-link-desc-refresh ()
+  "Refresh hyperlink description at point with node title."
+  (interactive)
+  (when-let*
+      ((context (org-element-context))
+       (type (org-element-property :type context))
+       (is-id-link (and (eq (org-element-type context) 'link)
+                        (string= type "id")))
+       (id (org-element-property :path context))
+       (beg (org-element-property :begin context))
+       (end (org-element-property :end context))
+       (desc (buffer-substring-no-properties
+              (org-element-property :contents-begin context)
+              (org-element-property :contents-end context)))
+       (node (org-roam-node-from-id id))
+       (titles (cons (org-roam-node-title node)
+                     (org-roam-node-aliases node)))
+       (desc (if (= (length titles) 1)
+                 (nth 0 titles)
+               (completing-read (format "Change description ('%s'): " desc)
+                                titles nil t ))))
+    (goto-char beg)
+    (delete-region beg end)
+    (insert (format "[[%s:%s][%s]]" type id desc))
+    (run-hook-with-args 'org-roam-post-node-insert-hook id desc)))
 
 (provide 'org-roam-ok-node)
 ;;; org-roam-ok-node.el ends here
