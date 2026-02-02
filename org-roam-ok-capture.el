@@ -35,32 +35,36 @@
 Each file in this directory should contain template body.")
 
 ;;;###autoload
-(defun org-roam-ok-capture-templates-merge (templates)
+(defun org-roam-ok-capture-templates-merge (templates &optional local)
   "Merge TEMPLATES to `org-roam-capture-templates'.
-The TEMPLATES and `org-roam-capture-templates' are sorted by their
-keys (i.e., the CAR of each template in the list) separately, merged,
-and then saved to `org-roam-capture-templates'.
+The TEMPLATES and `org-roam-capture-templates' are merged and sorted by the CAR
+of each entry and then saved to `org-roam-capture-templates'.
 
-TEMPLATES can include a list item like (KEY nil), which will remove the
-template for KEY.
+When LOCAL is non-nil, a local copy of `org-roam-capture-templates' is created
+before merge.
 
-See the documentation for `org-roam-capture-templates' for how to write
-each template."
-  (let ((old-items (sort org-roam-capture-templates
-                         (lambda (x y) (s-less? (car x) (car y)))))
-        (new-items (sort templates
-                         (lambda (x y) (s-less? (car x) (car y)))))
-        result)
+An element like `(KEY nil)' in TEMPLATES will remove the KEY entry.
+
+See the `org-roam-capture-templates' documentation for template entry format."
+  (let* ((capts (if (and local
+                         (not (local-variable-p 'org-roam-capture-templates)))
+                    (make-local-variable 'org-roam-capture-templates)
+                  'org-roam-capture-templates))
+         (old-items (sort (symbol-value capts)
+                          :lessp (lambda (x y) (string< (car x) (car y)))))
+         (new-items (sort templates
+                          (lambda (x y) (string< (car x) (car y)))))
+         result)
     (while (and old-items new-items)
-      (if (s-less? (caar old-items) (caar new-items))
-          (setq result (append result (list (pop old-items))))
-        (if (s-equals? (caar old-items) (caar new-items))
-            (progn
-              (setq result (append result (list (pop new-items))))
-              (pop old-items))
-          (setq result (append result (list (pop new-items)))))))
+      (setq result (if (string< (caar old-items) (caar new-items))
+                       (append result (list (pop old-items)))
+                     (if (string= (caar old-items) (caar new-items))
+                         (progn
+                           (pop old-items)
+                           (append result (list (pop new-items))))
+                       (append result (list (pop new-items)))))))
     (setq result (append result old-items new-items))
-    (setopt org-roam-capture-templates (--filter (cadr it) result))))
+    (set capts (seq-filter (lambda (it) (cadr it)) result))))
 
 (defun org-roam-ok-capture-template-as-string (template)
   "Read content of TEMPLATE as string.
