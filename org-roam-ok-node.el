@@ -601,6 +601,17 @@ as the display template function, set this function to
 
 ;;; ID Replacement
 
+(defun org-roam-ok-node-file-save (node)
+  "Save file associated with NODE if modified."
+  (when-let* ((file (org-roam-node-file node)))
+    (with-current-buffer (find-file-noselect file)
+      (when (buffer-modified-p)
+        ;; TODO(2026-02-01): Optionally prompt the user to save buffer or not,
+        ;; using `read-char-choice'. The initial attempt failed due to the
+        ;; function not reading input character reliably.
+        (save-buffer)
+        (org-roam-db-update-file file)))))
+
 (defun org-roam-ok-node-replace-id (new-id &optional id)
   "Replace ID of node to NEW-ID.
 The function replaces ID of a node to NEW-ID, as well as those IDs within the
@@ -625,7 +636,6 @@ it is set from the current node."
         ;; Replace all occurrences.
         (dolist (node nodes)
           (let ((file (org-roam-node-file node)))
-
             (with-current-buffer (find-file-noselect file)
               (goto-char (point-min))
               (while (re-search-forward pattern nil t)
@@ -635,10 +645,8 @@ it is set from the current node."
                  ;;           (desc (match-string 2)))
                  ;;     (format "[[id:%s][%s]]" new-id desc)
                  ;;   (format "[[id:%s]]" new-id))
-                 ))
-              (when (buffer-modified-p)
-                (save-buffer)
-                (org-roam-db-update-file file))))))
+                 ))))
+          (org-roam-ok-node-file-save node)))
     (error "Node with OLD-ID not found" id)))
 
 ;;; Subdirectories
