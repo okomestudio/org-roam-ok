@@ -691,6 +691,45 @@ The optional PROMPT string overrides the default message."
         (org-roam-db-update-file new-file))
     (error "Problem moving node")))
 
+(defun org-roam-ok-node-normalize-parent-directory (&optional node)
+  "Normalize parent directory name of NODE."
+  (interactive (list (org-roam-node-at-point)))
+  (if-let* ((node-id (org-roam-node-id node))
+            (this-file (org-roam-node-file node))
+            (this-parent (file-name-directory this-file))
+            (this-subdir (file-name-parent-directory
+                          (file-name-parent-directory this-file)))
+            (new-parent (file-name-concat this-subdir node-id))
+            (new-file (file-name-concat new-parent
+                                        (file-name-nondirectory this-file))))
+      (when (not (string= this-parent new-parent))
+        (make-directory new-parent t)
+        (org-roam-db-clear-file this-file)
+        (rename-file this-parent new-parent t)
+        (when-let* ((buffer (find-buffer-visiting this-file)))
+          (with-current-buffer buffer
+            (set-visited-file-name new-file)
+            (revert-buffer :ignore-auto :noconfirm)))
+        (org-roam-db-update-file new-file))
+    (error "Problem moving node")))
+
+(defun org-roam-ok-node-modernize-id (&optional node)
+  "Modernize ID of NODE using ts-b62 format with `org-id-ext'."
+  (interactive (list (org-roam-node-at-point)))
+  (if-let* ((new-id (save-excursion
+                      (with-current-buffer
+                          (find-file-noselect (org-roam-node-file node))
+                        (goto-char (point-min))
+                        (org-id-ext-new-from-ctime)))))
+      (let ((id (org-roam-node-id node))
+            (ts (format-time-string "%Y-%m-%dT%H:%M:%S"
+                                    (org-id-ext-ts-b62-to-time new-id))))
+        (org-roam-ok-node-replace-id new-id id)
+        (let ((modernized-node (org-roam-node-from-id new-id)))
+          (org-roam-ok-node-normalize-parent-directory modernized-node))
+        (message "Modernize ID: %s => %s (%s)" id new-id ts))
+    (warn "Modernized ID cannot be generated")))
+
 ;;; Misc.
 
 (cl-defun org-roam-ok-node-rename-visited-file-maybe ()
@@ -699,7 +738,8 @@ The optional PROMPT string overrides the default message."
                     (save-excursion
                       (goto-char (point-min))
                       (org-roam-node-at-point))))
-            (slug (ok-string-text-to-slug (org-roam-node-title node)))
+            (title (org-roam-node-title node))
+            (slug (ok-string-text-to-slug title))
             (file-name (format "%s.org" slug))
             (parent-dir (file-name-directory buffer-file-name)))
       (unless (string= buffer-file-name
