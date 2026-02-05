@@ -603,14 +603,12 @@ as the display template function, set this function to
 
 (defun org-roam-ok-node-file-save (node)
   "Save file associated with NODE if modified."
-  (when-let* ((file (org-roam-node-file node)))
-    (with-current-buffer (find-file-noselect file)
-      (when (buffer-modified-p)
-        ;; TODO(2026-02-01): Optionally prompt the user to save buffer or not,
-        ;; using `read-char-choice'. The initial attempt failed due to the
-        ;; function not reading input character reliably.
-        (save-buffer)
-        (org-roam-db-update-file file)))))
+  (with-current-buffer (find-file-noselect (org-roam-node-file node))
+    (when (buffer-modified-p)
+      ;; TODO(2026-02-01): Optionally prompt the user to save buffer or not,
+      ;; using `read-char-choice'. The initial attempt failed due to the
+      ;; function not reading input character reliably.
+      (save-buffer))))
 
 (defun org-roam-ok-node-replace-id (new-id &optional id)
   "Replace ID of node to NEW-ID.
@@ -626,12 +624,9 @@ it is set from the current node."
                                (org-roam-backlink-source-node backlink))
                              (org-roam-backlinks-get this-node :unique t))
                             (list this-node)))
-             (pattern (format "\\[\\[id:%s\\(::\\|\\]\\)" id))
-             modified-buffers)
+             (pattern (format "\\[\\[id:%s\\(::\\|\\]\\)" id)))
         ;; Replace ID in the node itself.
-        (with-current-buffer
-            (find-file-noselect (org-roam-node-file this-node))
-          (org-entry-put this-node "ID" new-id))
+        (org-entry-put this-node "ID" new-id)
 
         ;; Replace all occurrences.
         (dolist (node nodes)
@@ -660,18 +655,18 @@ it is set from the current node."
   "Pick subdirectory from `org-roam-ok-node-subdirectory'.
 The optional PROMPT string overrides the default message."
   (when-let* ((cs (--map (pcase-let* ((`(,sym . ,rdir) it))
-                           (cons (format "%s (%s)" sym rdir)
-                                 (expand-file-name rdir org-roam-directory)))
-                         org-roam-ok-node-subdirectory)))
-    (alist-get (completing-read (or prompt "Subdirectory: ")
-                                (--map (car it) cs)
-                                nil t)
-               cs nil nil #'equal)))
+                           (cons (format "%s (%s)" sym rdir) rdir))
+                         org-roam-ok-node-subdirectory))
+              (key (completing-read (or prompt "Subdirectory: ")
+                                    (--map (car it) cs)
+                                    nil t)))
+    (alist-get key cs nil nil #'equal)))
 
 (defun org-roam-ok-node-mv (&optional node new-subdir)
   "Move NODE under NEW-SUBDIR."
   (interactive (list (org-roam-node-at-point)
-                     (org-roam-ok-node-subdirectory--pick)))
+                     (expand-file-name (org-roam-ok-node-subdirectory--pick)
+                                       org-roam-directory)))
   (if-let* ((_ new-subdir)
             (this-file (org-roam-node-file node))
             (this-parent (file-name-directory this-file))
@@ -681,15 +676,31 @@ The optional PROMPT string overrides the default message."
             (new-file (file-name-concat new-subdir rel-file))
             (new-parent (file-name-directory new-file)))
       (progn
-        (make-directory new-parent t)
+        ;; (make-directory new-parent t)
         (org-roam-db-clear-file this-file)
-        (rename-file this-parent new-parent 1)
+        (rename-file this-parent new-subdir 1)
+        (org-roam-db-update-file new-file)
         (when-let* ((buffer (find-buffer-visiting this-file)))
           (with-current-buffer buffer
-            (set-visited-file-name new-file)
-            (revert-buffer :ignore-auto :noconfirm)))
-        (org-roam-db-update-file new-file))
+            (set-visited-file-name new-file t t)
+            ;; (save-buffer)
+            ;; (revert-buffer :ignore-auto :noconfirm)
+            )))
     (error "Problem moving node")))
+
+(defun org-roam-ok-node-extract-subtree (subdir)
+  "Extract subtree at point to SUBDIR."
+  (interactive (list (org-roam-ok-node-subdirectory--pick)))
+  (if-let* ((org-roam-extract-new-file-path
+             (file-name-concat (if (string-prefix-p "./" subdir)
+                                   (substring subdir 2)
+                                 subdir)
+                               "${id}" "${slug}.org")))
+      ;; TODO(2025-11-08): Move files referenced within the subtree to the same
+      ;; target directory? It's tricky because copying may create dupes. Or
+      ;; rewrite as relative paths?
+      (org-roam-extract-subtree)
+    (error "Problem extracting subtree")))
 
 (defun org-roam-ok-node-normalize-parent-directory (&optional node)
   "Normalize parent directory name of NODE."
@@ -713,40 +724,53 @@ The optional PROMPT string overrides the default message."
         (org-roam-db-update-file new-file))
     (error "Problem moving node")))
 
+(defun org-id-ext-new-from-ctime (&optional node)
+  "Generate new ts-b62 ID from CTIME property of NODE."
+  (interactive (list (org-roam-node-at-point)))
+  (let* ((time (org-roam-timestamps-encode
+                (org-entry-get (org-roam-node-point node) "CTIME" t)))
+         (jitter-us (* (random 1000) 1000)) ; millisec jitter in microsec
+         (time (time-add time (list 0 0 jitter-us 0)))
+         (ts-ms (floor (* 1000 (float-time time))))
+         (unique (org-id-ext-int-to-base62 ts-ms))
+         (prefix (when org-id-prefix (format "%s:" org-id-prefix)))
+         (id (concat prefix unique)))
+    id))
+
 (defun org-roam-ok-node-modernize-id (&optional node)
   "Modernize ID of NODE using ts-b62 format with `org-id-ext'."
   (interactive (list (org-roam-node-at-point)))
-  (if-let* ((new-id (save-excursion
-                      (with-current-buffer
-                          (find-file-noselect (org-roam-node-file node))
-                        (goto-char (point-min))
-                        (org-id-ext-new-from-ctime)))))
+  (if-let* ((new-id (org-id-ext-new-from-ctime node)))
       (let ((id (org-roam-node-id node))
+            (title (org-roam-node-title node))
             (ts (format-time-string "%Y-%m-%dT%H:%M:%S"
                                     (org-id-ext-ts-b62-to-time new-id))))
         (org-roam-ok-node-replace-id new-id id)
-        (let ((modernized-node (org-roam-node-from-id new-id)))
-          (org-roam-ok-node-normalize-parent-directory modernized-node))
-        (message "Modernize ID: %s => %s (%s)" id new-id ts))
+        (when-let* ((new-node (org-roam-node-from-id new-id))
+                    (_ (= (org-roam-node-level new-node) 0)))
+          (org-roam-ok-node-normalize-parent-directory new-node))
+        (message "Modernize ID (%s): %s => %s (%s)" title id new-id ts))
     (warn "Modernized ID cannot be generated")))
 
 ;;; Misc.
 
-(cl-defun org-roam-ok-node-rename-visited-file-maybe ()
-  "Rename file if different from one generated with title slug."
+(cl-defun org-roam-ok-node-rename-visited-file-maybe (&optional ask)
+  "Rename file if different from one generated with title slug.
+If ASK is non-nil, prompt for a new file name."
   (if-let* ((node (when (and (buffer-file-name) (org-roam-file-p))
                     (save-excursion
                       (goto-char (point-min))
                       (org-roam-node-at-point))))
             (title (org-roam-node-title node))
             (slug (ok-string-text-to-slug title))
-            (file-name (format "%s.org" slug))
-            (parent-dir (file-name-directory buffer-file-name)))
-      (unless (string= buffer-file-name
-                       (file-name-concat parent-dir file-name))
-        (when-let* ((s (read-file-name "Rename file with title slug: "
-                                       nil nil nil file-name)))
-          (rename-visited-file s)))))
+            (file-name (and (> (length slug) 0) (format "%s.org" slug)))
+            (parent-dir (file-name-directory buffer-file-name))
+            (full-file-name (file-name-concat parent-dir file-name)))
+      (unless (string= (buffer-file-name) full-file-name)
+        (when ask
+          (setq full-file-name
+                (read-file-name "Rename file: " nil nil nil file-name)))
+        (rename-visited-file full-file-name))))
 
 (cl-defun org-roam-ok-node-link-desc-refresh ()
   "Refresh hyperlink description at point with node title."
