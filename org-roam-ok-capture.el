@@ -110,6 +110,9 @@ This function prompts user for a Bibtex item."
        ("book"
         `(:book-author ,(org-ok-ref-format-author
                          (alist-get "author" record "" nil 'equal))))
+       ("mvbook"
+        `(:book-author ,(org-ok-ref-format-author
+                         (alist-get "author" record "" nil 'equal))))
        ("online"
         `(:article-author ,(org-ok-ref-format-author
                             (alist-get "author" record "" nil 'equal))))
