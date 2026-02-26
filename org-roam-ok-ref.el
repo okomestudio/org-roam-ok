@@ -85,7 +85,8 @@ If the point is on an Org link for a cite link, use it as the INITIAL-INPUT for
 (defun org-roam-ok-ref-search-buffer (key)
   "Open the ref search buffer for citation KEY."
   (interactive
-   (list (if-let* ((context (org-element-context))
+   (list (if-let* ((context (and (derived-mode-p 'org-mode)
+                                 (org-element-context)))
                    (link (and (eq (org-element-type context) 'link)
                               (org-element-property :raw-link context)))
                    (key (when (string-match "^cite:[@&]?\\(.*\\)$" link)
