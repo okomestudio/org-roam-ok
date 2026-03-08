@@ -610,23 +610,39 @@ as the display template function, set this function to
       ;; function not reading input character reliably.
       (save-buffer))))
 
-(defun org-roam-ok-node-replace-id (new-id &optional id)
+(defun org-roam-ok-node-replace-id (node id)
+  "Replace ID of NODE."
+  (if-let* ((file (org-roam-node-file node))
+            (node-point (org-roam-node-point node)))
+      (with-current-buffer (or (find-buffer-visiting file)
+                               (find-file-noselect file))
+        (save-excursion
+          (goto-char node-point)
+          (unless (or (org-at-heading-p)
+                      (and (= (point) (point-min))
+                           (looking-at-p (rx (* space) ":PROPERTIES:"))))
+            (error "Point is not on a headline or file-level property drawer"))
+          (unless (string= (org-roam-node-id node) (org-entry-get nil "ID"))
+            (error "Problem pointing to node"))
+          (org-entry-put nil "ID" id)))
+    (error "Node not found")))
+
+(defun org-roam-ok-node-replace-id-and-backlinks (new-id &optional id)
   "Replace ID of node to NEW-ID.
 The function replaces ID of a node to NEW-ID, as well as those IDs within the
-nodes referenced via the backlinks of node with ID. If ID is not provided,
-it is set from the current node."
+nodes referenced via the backlinks of node with ID.
+
+If ID is not provided, it is set from the current node."
   (interactive "sNew ID: ")
-  (if-let* ((this-node (or (and id (org-roam-node-from-id id))
-                           (org-roam-node-at-point)))
-            (id (org-roam-node-id this-node)))
+  (if-let* ((id (or id (org-roam-id-at-point)))
+            (this-node (org-roam-node-from-id id)))
       (let* ((nodes (append (mapcar
                              (lambda (backlink)
                                (org-roam-backlink-source-node backlink))
                              (org-roam-backlinks-get this-node :unique t))
                             (list this-node)))
              (pattern (format "\\[\\[id:%s\\(::\\|\\]\\)" id)))
-        ;; Replace ID in the node itself.
-        (org-entry-put this-node "ID" new-id)
+        (org-roam-ok-node-replace-id this-node new-id)
 
         ;; Replace all occurrences.
         (dolist (node nodes)
@@ -747,7 +763,7 @@ The optional PROMPT string overrides the default message."
         (let ((title (org-roam-node-title node))
               (ts (format-time-string "%Y-%m-%dT%H:%M:%S"
                                       (org-id-ext-ts-b62-to-time new-id))))
-          (org-roam-ok-node-replace-id new-id id)
+          (org-roam-ok-node-replace-id-and-backlinks new-id id)
           (when-let* ((new-node (org-roam-node-from-id new-id))
                       (_ (= (org-roam-node-level new-node) 0)))
             (org-roam-ok-node-normalize-parent-directory new-node))
