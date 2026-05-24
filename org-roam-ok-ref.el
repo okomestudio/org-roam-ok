@@ -24,6 +24,7 @@
 ;;; Code:
 
 (require 'org-roam)
+(require 'org-ref)
 
 (defun org-roam-ok-ref--find (fun &optional initial-input filter-fn)
   "Advise FUN (`org-roam-ref-find').
@@ -33,8 +34,10 @@ If the point is on an Org link for a cite link, use it as the INITIAL-INPUT for
     (when-let* ((link (org-element-lineage (org-element-context) '(link) t))
                 (type (org-element-property :type link))
                 (path (org-element-property :path link))
-                (ref (cond ((string= type "cite")
-                            (string-trim-left path "&")))))
+                ;; org-ref-cite-types
+                (ref (cond ((assoc type org-ref-cite-types #'string=)
+                            (if (string-match "&\\([^[:space:]]+\\)" path)
+                                (match-string 1 path))))))
       (setq initial-input ref)))
   (funcall fun initial-input filter-fn))
 
