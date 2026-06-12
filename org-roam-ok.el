@@ -78,6 +78,10 @@ When set to nil, the on-idle initializer will not run."
   (org-roam-ok--on-idle-init-scheduler)
   (add-hook 'post-command-hook #'org-roam-ok--on-idle-init-scheduler))
 
+;; This feature may be overly complicated. When desktop (for saving session) is
+;; used, caching nodes to session makes more sense.
+(make-obsolete org-roam-ok-on-idle-init-setup nil "0.14.13")
+
 ;;; Minor mode config
 
 (defun org-roam-ok-activate ()
@@ -89,7 +93,7 @@ When set to nil, the on-idle initializer will not run."
   (require 'org-roam-ok-node)
   (require 'org-roam-ok-ref)
 
-  (setopt find-file-visit-truename t)  ; see "5.3 Setting up Org-roam"
+  (setopt find-file-visit-truename t) ; see "5.3 Setting up Org-roam"
   (setopt org-roam-node-display-template #'org-roam-ok-node-display-template-beta)
 
   (add-hook 'before-save-hook #'org-roam-ok-node-rename-visited-file-maybe)
