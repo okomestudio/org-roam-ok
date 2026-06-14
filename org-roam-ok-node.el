@@ -775,16 +775,17 @@ The optional PROMPT string overrides the default message."
 (cl-defun org-roam-ok-node-rename-visited-file-maybe (&optional ask)
   "Rename file if different from one generated with title slug.
 If ASK is non-nil, prompt for a new file name."
-  (if-let* ((title (cadar (org-collect-keywords '("TITLE"))))
-            (slug (ok-string-text-to-slug title))
-            (file-name (and (> (length slug) 0) (format "%s.org" slug)))
-            (parent-dir (file-name-directory buffer-file-name))
-            (full-file-name (file-name-concat parent-dir file-name)))
-      (unless (string= (buffer-file-name) full-file-name)
-        (when ask
-          (setq full-file-name
-                (read-file-name "Rename file: " nil nil nil file-name)))
-        (rename-visited-file full-file-name))))
+  (when (derived-mode-p 'org-mode)
+    (if-let* ((title (cadar (org-collect-keywords '("TITLE"))))
+              (slug (ok-string-text-to-slug title))
+              (file-name (and (> (length slug) 0) (format "%s.org" slug)))
+              (parent-dir (file-name-directory buffer-file-name))
+              (full-file-name (file-name-concat parent-dir file-name)))
+        (unless (string= (buffer-file-name) full-file-name)
+          (when ask
+            (setq full-file-name
+                  (read-file-name "Rename file: " nil nil nil file-name)))
+          (rename-visited-file full-file-name)))))
 
 (cl-defun org-roam-ok-node-link-desc-refresh ()
   "Refresh hyperlink description at point with node title."
