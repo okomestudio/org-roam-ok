@@ -772,10 +772,15 @@ The optional PROMPT string overrides the default message."
 
 ;;; Misc.
 
+(defvar org-roam-ok-node-sync-title-and-filename nil
+  "Set non-nil to sync Org title and file name.
+The file name is generated as title slug using `ok-string-text-to-slug'.")
+
 (cl-defun org-roam-ok-node-rename-visited-file-maybe (&optional ask)
   "Rename file if different from one generated with title slug.
 If ASK is non-nil, prompt for a new file name."
-  (when (derived-mode-p 'org-mode)
+  (when (and (derived-mode-p 'org-mode)
+             org-roam-ok-node-sync-title-and-filename)
     (if-let* ((title (cadar (org-collect-keywords '("TITLE"))))
               (slug (ok-string-text-to-slug title))
               (file-name (and (> (length slug) 0) (format "%s.org" slug)))

@@ -4,7 +4,7 @@
 ;;
 ;; Author: Taro Sato <okomestudio@gmail.com>
 ;; URL: https://github.com/okomestudio/org-roam-ok
-;; Version: 0.14.14
+;; Version: 0.15.1
 
 ;; Keywords: org-mode, roam, plug-in
 ;; Package-Requires: ((emacs "30.1") (org "9.7") (org-ok "0.5.1") (org-roam "2.3.1") (async "1.9.7") (dash "2.20") (marginalia "1.6") (ok "0.12.2") (org-ref "3.1") (org-roam-timestamps "1.0.0") (s "1.13.1"))
