@@ -754,7 +754,9 @@ The optional PROMPT string overrides the default message."
     id))
 
 (defun org-roam-ok-node-modernize-id (&optional node)
-  "Modernize ID of NODE using ts-b62 format with `org-id-ext'."
+  "Modernize ID of NODE using ts-b62 format with `org-id-ext'.
+If invoked with a prefix argument, the parent directory will be normalized to
+the new ID."
   (interactive (list (org-roam-node-at-point)))
   (if-let* ((id (org-roam-node-id node))
             (_ (org-id-ext-ts-b62-p id)))
@@ -763,11 +765,13 @@ The optional PROMPT string overrides the default message."
         (let ((title (org-roam-node-title node))
               (ts (format-time-string "%Y-%m-%dT%H:%M:%S"
                                       (org-id-ext-ts-b62-to-time new-id))))
-          (org-roam-ok-node-replace-id-and-backlinks new-id id)
-          (when-let* ((new-node (org-roam-node-from-id new-id))
-                      (_ (= (org-roam-node-level new-node) 0)))
-            (org-roam-ok-node-normalize-parent-directory new-node))
-          (message "Modernize ID (%s): %s => %s (%s)" title id new-id ts))
+          (save-excursion
+            (org-roam-ok-node-replace-id-and-backlinks new-id id)
+            (when-let* ((new-node (org-roam-node-from-id new-id))
+                        (_ (= (org-roam-node-level new-node) 0)))
+              (when current-prefix-arg
+                (org-roam-ok-node-normalize-parent-directory new-node)))
+            (message "Modernize ID (%s): %s => %s (%s)" title id new-id ts)))
       (warn "Modernized ID cannot be generated"))))
 
 ;;; Misc.
