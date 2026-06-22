@@ -124,16 +124,8 @@ This function prompts user for a Bibtex item."
         `(:article-author ,(org-ok-ref-format-author
                             (alist-get "author" record "" nil 'equal))))
        ("podcast"
-        (let ((parent
-               (let* ((pattern
-                       (format "^\\(%s\\)[0-9]+"
-                               (s-join "\\|"
-                                       (--map (car it)
-                                              org-roam-ok-capture-parent-from-citekey))))
-                      (matched (if (string-match pattern key)
-                                   (match-string 1 key)
-                                 "")))
-                 (alist-get matched org-roam-ok-capture-parent-from-citekey key nil 'equal))))
+        (let ((parent (assoc-default key org-roam-ok-capture-parent-from-citekey
+                                     #'string-match-p key)))
           `( :podcast-guest ,(org-ok-ref-format-author
                               (alist-get "guest" record "" nil 'equal))
              :parent ,parent )))))
