@@ -80,8 +80,8 @@ The TEMPLATE file is looked for in `org-roam-ok-capture-template-directory'."
   "The mapping from Bibtex record type to capture keys.")
 
 (defcustom org-roam-ok-capture-parent-from-citekey
-  '(("SomeKeyPrefix" . "[[id:1234][Parent]]"))
-  "Alist mapping refkey prefix to its parent node.")
+  '(("CiteKeyRegex" . "[[id:1234][Parent]]"))
+  "Alist mapping citekey regexp to Org link to its parent node.")
 
 (defun org-roam-ok-capture--prepare-capture ()
   "Prepare data for capture using a Bibtex item.
