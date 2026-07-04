@@ -83,14 +83,33 @@ The TEMPLATE file is looked for in `org-roam-ok-capture-template-directory'."
   '(("CiteKeyRegex" . "[[id:1234][Parent]]"))
   "Alist mapping citekey regexp to Org link to its parent node.")
 
+(defcustom org-roam-ok-capture-get-entry-function
+  #'citar-get-entry           ; or `bibtex-completion-get-entry'
+  "Function used for getting bibliography entry by citation key.")
+
+(defun org-roam-ok-capture--get-entry (citekey)
+  "Get a bibliography entry by CITEKEY."
+  (funcall org-roam-ok-capture-get-entry-function citekey))
+
+(defcustom org-roam-ok-capture-get-value-function
+  (lambda (key entry &optional default)
+    (or (citar-get-value key entry) default))
+  ;; (lambda (key entry &optional default)
+  ;;   (alist-get key entry default nil #'equal))
+  "Function used for getting bibliography entry value.")
+
+(defun org-roam-ok-capture--get-value (key entry &optional default)
+  "Get a bibliography ENTRY value for KEY, returning DEFAULT when not found."
+  (funcall org-roam-ok-capture-get-value-function key entry default))
+
 (defun org-roam-ok-capture--prepare-capture ()
   "Prepare data for capture using a Bibtex item.
 This function prompts user for a Bibtex item."
-  (let* ((record (bibtex-completion-get-entry (org-ref-read-key)))
-         (key (alist-get "=key=" record nil nil 'equal))
+  (let* ((record (org-roam-ok-capture--get-entry (org-ref-read-key)))
+         (key (org-roam-ok-capture--get-value "=key=" record))
          (citekey (format "cite:&%s" key))
-         (type (alist-get "=type=" record nil nil 'equal))
-         (title (alist-get "title" record nil nil 'equal))
+         (type (org-roam-ok-capture--get-value "=type=" record))
+         (title (org-roam-ok-capture--get-value "title" record))
          (title (replace-regexp-in-string "[{}\\]" "" title))
          (output (shell-command-to-string
                   (format "rg \":ROAM_REFS:\s+.*cite:&%s\" -l %s"
@@ -106,28 +125,28 @@ This function prompts user for a Bibtex item."
      (pcase type
        ("article"
         `(:article-author ,(org-ok-ref-format-author
-                            (alist-get "author" record "" nil 'equal))))
+                            (org-roam-ok-capture--get-value "author" record ""))))
        ("book"
         `(:book-author ,(org-ok-ref-format-author
-                         (alist-get "author" record "" nil 'equal))))
+                         (org-roam-ok-capture--get-value "author" record ""))))
        ("incollection"
         `( :section-author ,(org-ok-ref-format-author
-                             (alist-get "author" record "" nil 'equal))
+                             (org-roam-ok-capture--get-value "author" record ""))
            :book-author ,(org-ok-ref-format-author
-                          (alist-get "author" record "" nil 'equal))
+                          (org-roam-ok-capture--get-value "author" record ""))
            :book-editor ,(org-ok-ref-format-author
-                          (alist-get "editor" record "" nil 'equal)) ))
+                          (org-roam-ok-capture--get-value "editor" record "")) ))
        ("mvbook"
         `(:book-author ,(org-ok-ref-format-author
-                         (alist-get "author" record "" nil 'equal))))
+                         (org-roam-ok-capture--get-value "author" record ""))))
        ("online"
         `(:article-author ,(org-ok-ref-format-author
-                            (alist-get "author" record "" nil 'equal))))
+                            (org-roam-ok-capture--get-value "author" record ""))))
        ("podcast"
         (let ((parent (assoc-default key org-roam-ok-capture-parent-from-citekey
                                      #'string-match-p key)))
           `( :podcast-guest ,(org-ok-ref-format-author
-                              (alist-get "guest" record "" nil 'equal))
+                              (org-roam-ok-capture--get-value "guest" record ""))
              :parent ,parent )))))
     `( :type ,type
        :node ,(org-roam-node-create :title title)
