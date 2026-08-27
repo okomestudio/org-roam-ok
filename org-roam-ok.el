@@ -4,30 +4,30 @@
 ;;
 ;; Author: Taro Sato <okomestudio@gmail.com>
 ;; URL: https://github.com/okomestudio/org-roam-ok
-;; Version: 0.16.1
+;; Version: 0.16.2
 
 ;; Keywords: org-mode, roam, plug-in
 ;; Package-Requires: ((emacs "30.1") (org "9.7") (org-ok "0.5.1") (org-roam "2.3.1") (async "1.9.7") (dash "2.20") (marginalia "1.6") (ok "0.12.2") (org-ref "3.1") (org-roam-timestamps "1.0.0") (s "1.13.1"))
 ;;
 ;;; License:
 ;;
-;; This program is free software; you can redistribute it and/or modify it under
-;; the terms of the GNU General Public License as published by the Free Software
-;; Foundation, either version 3 of the License, or (at your option) any later
-;; version.
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or (at
+;; your option) any later version.
 ;;
-;; This program is distributed in the hope that it will be useful, but WITHOUT
-;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-;; FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
-;; details.
+;; This program is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+;; General Public License for more details.
 ;;
-;; You should have received a copy of the GNU General Public License along with
-;; this program. If not, see <https://www.gnu.org/licenses/>.
+;; You should have received a copy of the GNU General Public License
+;; along with this program. If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;;; Commentary:
 ;;
-;; The `org-roam-ok' mode is a plugin to enhance `org-roam' in several ways. See
-;; the repository README for detail.
+;; The `org-roam-ok' mode is a plugin to enhance `org-roam' in several
+;; ways. See the repository README for detail.
 ;;
 ;;; Code:
 
@@ -38,7 +38,7 @@
   :group 'org-roam-ok
   :prefix "org-roam-ok-")
 
-(defvar org-roam-ok-version "0.16.1"
+(defvar org-roam-ok-version "0.16.2"
   "Package version.")
 
 (defcustom org-roam-ok-on-idle-delay 60

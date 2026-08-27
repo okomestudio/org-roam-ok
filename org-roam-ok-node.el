@@ -4,18 +4,18 @@
 ;;
 ;;; License:
 ;;
-;; This program is free software; you can redistribute it and/or modify it under
-;; the terms of the GNU General Public License as published by the Free Software
-;; Foundation, either version 3 of the License, or (at your option) any later
-;; version.
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or (at
+;; your option) any later version.
 ;;
-;; This program is distributed in the hope that it will be useful, but WITHOUT
-;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-;; FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
-;; details.
+;; This program is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+;; General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+;; along with this program. If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;;; Commentary:
 ;;
@@ -707,16 +707,27 @@ The optional PROMPT string overrides the default message."
 (defun org-roam-ok-node-extract-subtree (subdir)
   "Extract subtree at point to SUBDIR."
   (interactive (list (org-roam-ok-node-subdirectory--pick)))
-  (if-let* ((org-roam-extract-new-file-path
-             (file-name-concat (if (string-prefix-p "./" subdir)
-                                   (substring subdir 2)
-                                 subdir)
-                               "${id}" "${slug}.org")))
-      ;; TODO(2025-11-08): Move files referenced within the subtree to the same
-      ;; target directory? It's tricky because copying may create dupes. Or
-      ;; rewrite as relative paths?
-      (org-roam-extract-subtree)
-    (error "Problem extracting subtree")))
+  (unless (derived-mode-p 'org-mode)
+    (user-error "Buffer is not in Org mode"))
+  (unless (org-at-heading-p)
+    (user-error "Point must be on an Org heading to extract a subtree"))
+  (let* ((clean-subdir (string-remove-prefix "./" (or subdir "")))
+         (target-path (file-name-concat clean-subdir "${id}" "${slug}.org"))
+         (initial-buffers (buffer-list)))
+    (condition-case err
+        (atomic-change-group
+          (dlet ((org-roam-extract-new-file-path target-path))
+            ;; TODO(2025-11-08): Move files referenced within the
+            ;; subtree to the same target directory? It's tricky because
+            ;; copying may create dupes. Or rewrite as relative paths?
+            (org-roam-extract-subtree)))
+      (error
+       (dolist (buf (cl-set-difference (buffer-list) initial-buffers))
+         (when-let* ((file (buffer-file-name buf)))
+           (when (file-exists-p file)
+             (delete-file file)))
+         (kill-buffer buf))
+       (user-error "Subtree extraction failed: %s" (error-message-string err))))))
 
 (defun org-roam-ok-node-normalize-parent-directory (&optional node)
   "Normalize parent directory name of NODE."
