@@ -624,7 +624,7 @@ as the display template function, set this function to
             (error "Point is not on a headline or file-level property drawer"))
           (unless (string= (org-roam-node-id node) (org-entry-get nil "ID"))
             (error "Problem pointing to node"))
-          (org-entry-put nil "ID" id)))
+          (org-entry-put node-point "ID" id)))
     (error "Node not found")))
 
 (defun org-roam-ok-node-replace-id-and-backlinks (new-id &optional id)
@@ -692,16 +692,12 @@ The optional PROMPT string overrides the default message."
             (new-file (file-name-concat new-subdir rel-file))
             (new-parent (file-name-directory new-file)))
       (progn
-        ;; (make-directory new-parent t)
         (org-roam-db-clear-file this-file)
         (rename-file this-parent new-subdir 1)
         (org-roam-db-update-file new-file)
         (when-let* ((buffer (find-buffer-visiting this-file)))
           (with-current-buffer buffer
-            (set-visited-file-name new-file t t)
-            ;; (save-buffer)
-            ;; (revert-buffer :ignore-auto :noconfirm)
-            )))
+            (set-visited-file-name new-file t t))))
     (error "Problem moving node")))
 
 (defun org-roam-ok-node-extract-subtree (subdir)
