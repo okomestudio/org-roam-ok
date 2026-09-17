@@ -610,9 +610,11 @@ as the display template function, set this function to
       ;; function not reading input character reliably.
       (save-buffer))))
 
-(defun org-roam-ok-node-replace-id (node id)
-  "Replace ID of NODE."
-  (if-let* ((file (org-roam-node-file node))
+(defun org-roam-ok-node-replace-id (id &optional node)
+  "Replace the node ID property of NODE to ID.
+If NODE is not given, it will try to pick up the one at point."
+  (if-let* ((node (or node (org-roam-node-at-point)))
+            (file (org-roam-node-file node))
             (node-point (org-roam-node-point node)))
       (with-current-buffer (or (find-buffer-visiting file)
                                (find-file-noselect file))
@@ -624,7 +626,10 @@ as the display template function, set this function to
             (error "Point is not on a headline or file-level property drawer"))
           (unless (string= (org-roam-node-id node) (org-entry-get nil "ID"))
             (error "Problem pointing to node"))
-          (org-entry-put node-point "ID" id)))
+          (let ((inhibit-read-only t)
+                (search-invisible t))
+            (org-fold-show-entry)
+            (org-entry-put nil "ID" id))))
     (error "Node not found")))
 
 (defun org-roam-ok-node-replace-id-and-backlinks (new-id &optional id)
@@ -642,7 +647,7 @@ If ID is not provided, it is set from the current node."
                              (org-roam-backlinks-get this-node :unique t))
                             (list this-node)))
              (pattern (format "\\[\\[id:%s\\(::\\|\\]\\)" id)))
-        (org-roam-ok-node-replace-id this-node new-id)
+        (org-roam-ok-node-replace-id new-id this-node)
 
         ;; Replace all occurrences.
         (dolist (node nodes)
@@ -828,6 +833,32 @@ If ASK is non-nil, prompt for a new file name."
     (delete-region beg end)
     (insert (format "[[%s:%s][%s]]" type id desc))
     (run-hook-with-args 'org-roam-post-node-insert-hook id desc)))
+
+(defun org-roam-ok-node-choose-desc ()
+  "Prompt to select a title or alias for the Org-roam node link at point.
+Replaces the existing link description with the chosen string."
+  (interactive)
+  (let* ((context (org-element-context))
+         (type (org-element-type context)))
+    (unless (eq type 'link)
+      (user-error "Point is not on an Org link"))
+    (let* ((link-type (org-element-property :type context))
+           (path (org-element-property :path context)))
+      (unless (member link-type '("id" "roam"))
+        (user-error "Not an Org-roam link (expected 'id' or 'roam' link type)"))
+      (let ((node (org-roam-node-from-id path)))
+        (unless node
+          (user-error "No Org-roam node found for ID: %s" path))
+        (let* ((title (org-roam-node-title node))
+               (aliases (org-roam-node-aliases node))
+               (candidates (delete-dups (cons title aliases)))
+               (choice (completing-read (format "Select alias for '%s': " title)
+                                        candidates nil t)))
+          (save-excursion
+            (goto-char (org-element-property :begin context))
+            (if (looking-at "\\[\\[\\([^][]+?\\)\\]\\(?:\\[\\([^][]*\\)\\]\\)?\\]")
+                (replace-match (format "[[%s:%s][%s]]" link-type path choice))
+              (user-error "Failed to match bracket link syntax at point"))))))))
 
 (provide 'org-roam-ok-node)
 ;;; org-roam-ok-node.el ends here
