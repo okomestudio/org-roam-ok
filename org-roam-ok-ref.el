@@ -4,18 +4,18 @@
 ;;
 ;;; License:
 ;;
-;; This program is free software; you can redistribute it and/or modify it under
-;; the terms of the GNU General Public License as published by the Free Software
-;; Foundation, either version 3 of the License, or (at your option) any later
-;; version.
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or (at
+;; your option) any later version.
 ;;
-;; This program is distributed in the hope that it will be useful, but WITHOUT
-;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-;; FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
-;; details.
+;; This program is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+;; General Public License for more details.
 ;;
-;; You should have received a copy of the GNU General Public License along with
-;; this program. If not, see <https://www.gnu.org/licenses/>.
+;; You should have received a copy of the GNU General Public License
+;; along with this program. If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;;; Commentary:
 ;;
@@ -26,22 +26,24 @@
 (require 'org-roam)
 (require 'org-ref)
 
-(defun org-roam-ok-ref--find (fun &optional initial-input filter-fn)
-  "Advise FUN (`org-roam-ref-find').
-If the point is on an Org link for a cite link, use it as the INITIAL-INPUT for
-`org-roam-ref-find'. FILTER-FN is passed through."
+(defun org-roam-ok-ref-at-point ()
+  "Return the reference key if point is on an `org-ref` cite link."
   (when (derived-mode-p 'org-mode)
     (when-let* ((link (org-element-lineage (org-element-context) '(link) t))
                 (type (org-element-property :type link))
-                (path (org-element-property :path link))
-                ;; org-ref-cite-types
-                (ref (cond ((assoc type org-ref-cite-types #'string=)
-                            (if (string-match "&\\([^[:space:]]+\\)" path)
-                                (match-string 1 path))))))
-      (setq initial-input ref)))
-  (funcall fun initial-input filter-fn))
+                (_ (assoc type org-ref-cite-types #'string=))
+                (path (org-element-property :path link)))
+      (save-match-data
+        (when (string-match "&\\(\\S-+\\)" path)
+          (match-string 1 path))))))
 
-(advice-add #'org-roam-ref-find :around #'org-roam-ok-ref--find)
+(defun org-roam-ok-ref--filter-find-args (args)
+  "Filter ARGS for `org-roam-ref-find` to inject initial input from point."
+  (cl-destructuring-bind (&optional initial-input filter-fn) args
+    (list (or initial-input (org-roam-ok-ref-at-point))
+          filter-fn)))
+
+(advice-add #'org-roam-ref-find :filter-args #'org-roam-ok-ref--filter-find-args)
 
 (defun org-roam-ok-ref-reflinks-get (key)
   "Return the reflinks for citation KEY."
@@ -87,15 +89,7 @@ If the point is on an Org link for a cite link, use it as the INITIAL-INPUT for
 ;;;###autoload
 (defun org-roam-ok-ref-search-buffer (key)
   "Open the ref search buffer for citation KEY."
-  (interactive
-   (list (if-let* ((context (and (derived-mode-p 'org-mode)
-                                 (org-element-context)))
-                   (link (and (eq (org-element-type context) 'link)
-                              (org-element-property :raw-link context)))
-                   (key (when (string-match "^cite:[@&]?\\(.*\\)$" link)
-                          (match-string 1 link))))
-             key
-           (org-ref-read-key))))
+  (interactive (list (or (org-roam-ok-ref-at-point) (org-ref-read-key))))
   (let ((buffer (generate-new-buffer
                  (format "%s<%s>" org-roam-ok-ref-search-buffer key))))
     (switch-to-buffer buffer)

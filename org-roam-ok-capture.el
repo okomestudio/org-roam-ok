@@ -4,18 +4,18 @@
 ;;
 ;;; License:
 ;;
-;; This program is free software; you can redistribute it and/or modify it under
-;; the terms of the GNU General Public License as published by the Free Software
-;; Foundation, either version 3 of the License, or (at your option) any later
-;; version.
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or (at
+;; your option) any later version.
 ;;
-;; This program is distributed in the hope that it will be useful, but WITHOUT
-;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-;; FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
-;; details.
+;; This program is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+;; General Public License for more details.
 ;;
-;; You should have received a copy of the GNU General Public License along with
-;; this program. If not, see <https://www.gnu.org/licenses/>.
+;; You should have received a copy of the GNU General Public License
+;; along with this program. If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;;; Commentary:
 ;;
@@ -28,6 +28,7 @@
 (require 'org-ok)
 (require 'org-ref)
 (require 'org-roam-capture)
+(require 'org-roam-ok-ref)
 (require 's)
 
 (defcustom org-roam-ok-capture-template-directory nil
@@ -105,7 +106,8 @@ The TEMPLATE file is looked for in `org-roam-ok-capture-template-directory'."
 (defun org-roam-ok-capture--prepare-capture ()
   "Prepare data for capture using a Bibtex item.
 This function prompts user for a Bibtex item."
-  (let* ((record (org-roam-ok-capture--get-entry (org-ref-read-key)))
+  (let* ((record (org-roam-ok-capture--get-entry (or (org-roam-ok-ref-at-point)
+                                                     (org-ref-read-key))))
          (key (org-roam-ok-capture--get-value "=key=" record))
          (citekey (format "cite:&%s" key))
          (type (org-roam-ok-capture--get-value "=type=" record))
